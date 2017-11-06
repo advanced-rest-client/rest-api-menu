@@ -212,11 +212,13 @@ Custom property | Description | Default
     attached: function() {
       this.listen(window, 'datastore-destroyed', '_onDatabaseDestroy');
       this.listen(window, 'selected-rest-api-changed', '_selecteApiHandler');
+      this.listen(window, 'rest-api-index-updated', '_indexUpdated');
     },
 
     detached: function() {
       this.unlisten(window, 'datastore-destroyed', '_onDatabaseDestroy');
       this.unlisten(window, 'selected-rest-api-changed', '_selecteApiHandler');
+      this.unlisten(window, 'rest-api-index-updated', '_indexUpdated');
     },
 
     /**
@@ -403,6 +405,23 @@ Custom property | Description | Default
       }
       item._rev = result.rev;
       this.set(['items', index], item);
+    },
+    // Index item has been changed in the app somewhere..
+    _indexUpdated: function(e) {
+      if (!this.items && !this._isOpened) {
+        return;
+      }
+      var item = e.detail.item;
+      if (!this.items) {
+        this.set('items', [item]);
+        return;
+      }
+      var index = this.items.findIndex(obj => obj._id === item._id);
+      if (index === -1) {
+        this.push('items', item);
+      } else {
+        this.set(['item', index], item);
+      }
     }
   });
   </script>
