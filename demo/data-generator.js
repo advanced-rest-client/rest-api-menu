@@ -20,12 +20,29 @@ DataGenerator.generateApis = function(size) {
   }
   return result;
 };
+DataGenerator.generateApiData = function(apisIndex) {
+  var result = [];
+  apisIndex.forEach(item => {
+    result.push({
+      _id: item._id,
+      raml: {}
+    });
+  });
+  return result;
+};
 DataGenerator.generateData = function(size) {
   var projects = DataGenerator.generateApis(size);
-  var projectsDb = new PouchDB('rest-api-index');
-  return projectsDb.bulkDocs(projects);
+  var data = DataGenerator.generateApiData(projects);
+  var indexDb = new PouchDB('rest-api-index');
+  var dataDb = new PouchDB('rest-api-data');
+  return indexDb.bulkDocs(projects)
+  .then(() => {
+    return dataDb.bulkDocs(data);
+  });
 };
 DataGenerator.destroyData = function() {
   var db = new PouchDB('rest-api-index');
-  return db.destroy();
+  var dataDb = new PouchDB('rest-api-data');
+  return db.destroy()
+  .then(() => dataDb.destroy());
 };
