@@ -20,22 +20,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <script src="../demo/data-generator.js"></script>
     <script src="../../chance/dist/chance.min.js"></script>
     <link rel="import" href="../rest-api-menu.html">
+    <link rel="import" href="../../arc-models/rest-api-model.html">
   </head>
   <body>
 
     <test-fixture id="basic">
       <template>
         <rest-api-menu></rest-api-menu>
+        <rest-api-model></rest-api-model>
       </template>
     </test-fixture>
 
     <script>
-    /* global fixture, assert, DataGenerator, TestHelpers, MockInteractions */
+    /* global fixture, assert, DataGenerator, TestHelpers, MockInteractions, sinon */
     suite('basic', function() {
 
       var element;
       setup(function() {
-        element = fixture('basic');
+        element = fixture('basic')[0];
       });
 
       test('items is undefined', function() {
@@ -49,9 +51,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
       test('hasItems is false', function() {
         assert.isFalse(element.hasItems);
-      });
-      test('queryOptions is set', function() {
-        assert.ok(element.queryOptions);
       });
       test('dataUnavailable is undefined', function() {
         assert.isUndefined(element.dataUnavailable);
@@ -70,7 +69,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       var element;
       setup(function(done) {
-        element = fixture('basic');
+        element = fixture('basic')[0];
         element.addEventListener('has-items-changed', function(e) {
           if (e.detail.value) {
             done();
@@ -108,6 +107,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.typeOf(eventData.id, 'string');
           done();
         });
+      });
+
+      test('Reorders items on the list', function(done) {
+        TestHelpers.forceXIfStamp(element);
+        setTimeout(() => {
+          var item = element.$$('paper-item');
+          var stub = sinon.stub(element, '_onReorder');
+          MockInteractions.track(item, 0, 56);
+          assert.isTrue(stub.called);
+          done();
+        }, 50);
       });
     });
     </script>

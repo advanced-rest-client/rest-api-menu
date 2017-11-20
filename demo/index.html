@@ -18,6 +18,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
   <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
   <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+  <link rel="import" href="../../arc-models/rest-api-model.html">
   <link rel="import" href="../rest-api-menu.html">
   <script src="data-generator.js"></script>
   <script src="../../chance/dist/chance.min.js"></script>
@@ -37,6 +38,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div class="vertical-section-container centered">
       <h3>The `rest-api-menu`</h3>
       <rest-api-menu selected-api="[[selectedApi]]"></rest-api-menu>
+      <rest-api-model></rest-api-model>
       <div class="controls">
         <button on-tap="generate">Generate 100 requests items</button>
         <button on-tap="delete">Clear data</button>
