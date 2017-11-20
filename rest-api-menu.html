@@ -18,7 +18,6 @@ the License.
 <link rel="import" href="../paper-item/paper-item.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
 <link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
-<link rel="import" href="../app-pouchdb/pouchdb.html">
 <!--
 A quick access menu for REST API projects
 
@@ -32,8 +31,25 @@ It listens for `selected-rest-api-changed` custom event as an alternative
 to setting `selectedApi` property directly on the element.
 
 ### Example
-```
+
+```html
 <rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
+```
+
+### Datastore access
+
+This element uses events API to access datastore data. This is provided by the
+`arc-models/rest-api-model` element. See documentation for this element if you
+need to implement own data exchange logic.
+
+Datastore element is not in the shadow DOM of this element and is should be
+included in the application DOM.
+
+```html
+<link rel="import" href="bower_components/arc-models/rest-api-model.html">
+<link rel="import" href="bower_components/rest-api-menu/rest-api-menu.html">
+<rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
+<rest-api-model></rest-api-model>
 ```
 
 ### Styling
@@ -162,27 +178,6 @@ Custom property | Description | Default
         notify: true
       },
       /**
-       * Database query options for pagination.
-       * Override this value to change the query options like limit of the results in one call.
-       *
-       * This is query options passed to the PouchDB `allDocs` function. Note that it will not
-       * set `include_docs` option. A conviniet shortcut is to set the the `includeDocs` property
-       * and the directive will be added automatically.
-       */
-      queryOptions: {
-        type: Object,
-        readOnly: true,
-        value: function() {
-          return {
-            limit: 100,
-            descending: true,
-            // jscs:disable
-            include_docs: true
-            // jscs:enable
-          };
-        }
-      },
-      /**
        * Computed value. True if query ended and there's no results.
        */
       dataUnavailable: {
@@ -197,12 +192,9 @@ Custom property | Description | Default
         }
       },
       // Currently selected project ID
-      selectedApi: String
-    },
-
-    // Returns a handler to the datastore instance
-    get _db() {
-      return new PouchDB('rest-api-index');
+      selectedApi: String,
+      // Page token for datastore pagination
+      nextPageToken: String
     },
 
     observers: [
@@ -213,21 +205,22 @@ Custom property | Description | Default
       this.listen(window, 'datastore-destroyed', '_onDatabaseDestroy');
       this.listen(window, 'selected-rest-api-changed', '_selecteApiHandler');
       this.listen(window, 'rest-api-index-updated', '_indexUpdated');
+      this.listen(window, 'rest-api-deleted', '_indexDeleted');
     },
 
     detached: function() {
       this.unlisten(window, 'datastore-destroyed', '_onDatabaseDestroy');
       this.unlisten(window, 'selected-rest-api-changed', '_selecteApiHandler');
       this.unlisten(window, 'rest-api-index-updated', '_indexUpdated');
+      this.unlisten(window, 'rest-api-deleted', '_indexDeleted');
     },
 
     /**
      * Resets the state of the variables.
      */
     reset: function() {
-      if (this.queryOptions) {
-        delete this.queryOptions.startkey;
-        delete this.queryOptions.skip;
+      if (this.nextPageToken) {
+        this.nextPageToken = undefined;
       }
       this._setQuerying(false);
       this.set('items', []);
@@ -260,10 +253,7 @@ Custom property | Description | Default
       if (datastore.indexOf('rest-api-index') === -1 && datastore[0] !== 'all') {
         return;
       }
-      this._db.close()
-      .then(() => {
-        this.refresh();
-      });
+      this.refresh();
     },
 
     /**
@@ -283,34 +273,48 @@ Custom property | Description | Default
      * The function to call when new query for data is needed.
      */
     makeQuery: function() {
-      this.debounce('menu-load-saved-page', this._loadPage, 20);
+      this.debounce('menu-load-rest-apis', this._loadPage, 20);
     },
     /**
      * Performs the query and processes the result.
      */
     _loadPage: function() {
-      var db = this._db;
-      this._setQuerying(true);
-      db.allDocs(this.queryOptions)
-      .then(response => {
+      var detail = {};
+      if (this.nextPageToken) {
+        detail.nextPageToken = this.nextPageToken;
+      }
+      var event = new CustomEvent('rest-api-index-list', {
+        detail: detail,
+        bubbles: true,
+        cancelable: true
+      });
+      this.dispatchEvent(event);
+      if (!event.defaultPrevented) {
         this._setQuerying(false);
-        if (response && response.rows.length > 0) {
-          // Set up pagination.
-          this.queryOptions.startkey = response.rows[response.rows.length - 1].key;
-          this.queryOptions.skip = 1;
-          let res = response.rows.map(item => item.doc);
-          if (!this.items) {
-            res = this._prepareData(res);
-            this.set('items', res);
-          } else {
-            var concat = this.items.concat(res);
-            concat = this._prepareData(concat);
-            this.set('items', concat);
-          }
-          this.async(() => {
-            this._loadPage();
-          }, 50);
+        console.warn('REST API model detached from the dom.');
+        return;
+      }
+      return event.detail.result
+      .then(result => {
+        this._setQuerying(false);
+        this.nextPageToken = result.nextPageToken;
+        return result.items;
+      })
+      .then(items => {
+        if (!items || !items.length) {
+          return;
         }
+        if (!this.items) {
+          items = this._prepareData(items);
+          this.set('items', items);
+        } else {
+          var concat = this.items.concat(items);
+          concat = this._prepareData(concat);
+          this.set('items', concat);
+        }
+        this.async(() => {
+          this._loadPage();
+        }, 50);
       })
       .catch((e) => {
         this._setQuerying(false);
@@ -339,7 +343,7 @@ Custom property | Description | Default
         if (a.order > b.order) {
           return 1;
         }
-        return 0;
+        return a.title.localeCompare(b.title);
       });
       return list;
     },
@@ -387,41 +391,50 @@ Custom property | Description | Default
     },
     // Updates requests in bulk opeartion.
     _updateBulk: function(items) {
-      return this._db.bulkDocs(items)
-      .then(response => {
-        response.forEach((result, index) => this._updateItemChanged(items[index], result));
+      var event = new CustomEvent('rest-api-index-updated-batch', {
+        detail: {
+          docs: items
+        },
+        bubbles: true,
+        cancelable: true
       });
-    },
-    // Updates `_rev` property of updated item.
-    _updateItemChanged: function(item, result) {
-      if (!result.ok) {
-        console.warn('Item not updated', item, result);
-        return;
-      }
-      var index = this.items.findIndex(obj => obj._id === result.id);
-      if (index === -1) {
-        console.warn('Something is wrong. This should not happen.');
-        return;
-      }
-      item._rev = result.rev;
-      this.set(['items', index], item);
+      this.dispatchEvent(event);
+      return event.detail.result.catch(cause => {
+        console.error(cause);
+      });
     },
     // Index item has been changed in the app somewhere..
     _indexUpdated: function(e) {
       if (!this.items && !this._isOpened) {
         return;
       }
-      var item = e.detail.item;
+      var item = e.detail.doc;
       if (!this.items) {
         this.set('items', [item]);
         return;
       }
       var index = this.items.findIndex(obj => obj._id === item._id);
       if (index === -1) {
-        this.push('items', item);
+        let it = this.items;
+        it.push(item);
+        it = this._prepareData(it);
+        this.set('items', it);
       } else {
         this.set(['item', index], item);
       }
+    },
+    // Handler for the deleted event
+    _indexDeleted: function(e) {
+      var items = this.items;
+      if (!items || !items.length) {
+        return;
+      }
+      var id = e.detail.id;
+      var index = items.findIndex(item => item._id === id);
+      if (index === -1) {
+        return;
+      }
+      this.splice('items', index, 1);
     }
   });
   </script>
