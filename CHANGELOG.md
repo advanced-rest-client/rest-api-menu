@@ -1,3 +1,13 @@
+<a name="0.1.4"></a>
+## [0.1.4](https://github.com/advanced-rest-client/rest-api-menu/compare/0.1.3...0.1.4) (2017-11-20)
+
+
+### Update
+
+* Replqaced local datastore quersion with model event api ([7bf0b59fbe6547dcb46ac3eb153842aa16940c6a](https://github.com/advanced-rest-client/rest-api-menu/commit/7bf0b59fbe6547dcb46ac3eb153842aa16940c6a))
+
+
+
 <a name="0.1.3"></a>
 ## [0.1.3](https://github.com/advanced-rest-client/rest-api-menu/compare/0.1.2...0.1.3) (2017-11-06)
 
