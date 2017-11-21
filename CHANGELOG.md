@@ -1,3 +1,14 @@
+<a name="0.1.6"></a>
+## [0.1.6](https://github.com/advanced-rest-client/rest-api-menu/compare/0.1.5...0.1.6) (2017-11-21)
+
+
+### Update
+
+* Updated demo page bto include model generation ([85cfa70bdd329797ffe58c9dd0d899a0d555323c](https://github.com/advanced-rest-client/rest-api-menu/commit/85cfa70bdd329797ffe58c9dd0d899a0d555323c))
+* Updated sorting and handing updated event. ([931b09e8c6f28789f408ca7155eadcf3da3b42b1](https://github.com/advanced-rest-client/rest-api-menu/commit/931b09e8c6f28789f408ca7155eadcf3da3b42b1))
+
+
+
 <a name="0.1.5"></a>
 ## [0.1.5](https://github.com/advanced-rest-client/rest-api-menu/compare/0.1.4...0.1.5) (2017-11-20)
 
