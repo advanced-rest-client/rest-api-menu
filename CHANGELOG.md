@@ -1,3 +1,13 @@
+<a name="0.1.8"></a>
+## [0.1.8](https://github.com/advanced-rest-client/rest-api-menu/compare/0.1.7...0.1.8) (2017-11-21)
+
+
+### Fix
+
+* Fixed variable name that represent an ID ([aa0b0c553ff0c9a8a2753b85078455647286ffd0](https://github.com/advanced-rest-client/rest-api-menu/commit/aa0b0c553ff0c9a8a2753b85078455647286ffd0))
+
+
+
 <a name="0.1.7"></a>
 ## [0.1.7](https://github.com/advanced-rest-client/rest-api-menu/compare/0.1.6...0.1.7) (2017-11-21)
 

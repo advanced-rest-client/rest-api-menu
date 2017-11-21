@@ -350,7 +350,7 @@ Custom property | Description | Default
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      var id = e.model.get('item.dataid');
+      var id = e.model.get('item._id');
       this.fire('navigate', {
         base: 'api-console',
         id: id
