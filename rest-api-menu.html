@@ -142,7 +142,7 @@ Custom property | Description | Default
       </div>
     </template>
     <dom-reorderer on-dom-order-changed="_onReorder">
-      <template is="dom-repeat" items="[[items]]">
+      <template is="dom-repeat" items="[[items]]" id="list">
         <paper-item on-tap="_openAPI" title$="[[item.title]]" class$="[[_computeItemClass(item._id, selectedApi)]]">
           <span class="name">[[item.title]], [[item.version]]</span>
         </paper-item>
@@ -305,12 +305,13 @@ Custom property | Description | Default
           return;
         }
         if (!this.items) {
-          items = this._prepareData(items);
+          items.sort(this._sortData);
           this.set('items', items);
         } else {
           var concat = this.items.concat(items);
-          concat = this._prepareData(concat);
+          concat.sort(this._sortData);
           this.set('items', concat);
+          this.$$('#list').render();
         }
         this.async(() => {
           this._loadPage();
@@ -327,25 +328,16 @@ Custom property | Description | Default
     },
 
     /**
-     * Sorts projects list by `order` property.
-     *
-     * @param {Array} list List of projects objects
-     * @return {Array} Sorted list of projects
+     * Sorts projects list by `order` and the `title` properties.
      */
-    _prepareData: function(list) {
-      if (!list || !list.length) {
-        return [];
+    _sortData: function(a, b) {
+      if (a.order < b.order) {
+        return -1;
       }
-      list.sort((a, b) => {
-        if (a.order < b.order) {
-          return -1;
-        }
-        if (a.order > b.order) {
-          return 1;
-        }
-        return a.title.localeCompare(b.title);
-      });
-      return list;
+      if (a.order > b.order) {
+        return 1;
+      }
+      return a.title.localeCompare(b.title);
     },
 
     // Computes value for the `dataUnavailable` property.
@@ -385,8 +377,12 @@ Custom property | Description | Default
         }
       });
       this._updateBulk(update)
-      .catch(() => {
+      .then(() => {
+        this.$$('#list').render();
+      })
+      .catch(cause => {
         this.$.reorderError.opened = true;
+        console.error(cause);
       });
     },
     // Updates requests in bulk opeartion.
@@ -399,9 +395,7 @@ Custom property | Description | Default
         cancelable: true
       });
       this.dispatchEvent(event);
-      return event.detail.result.catch(cause => {
-        console.error(cause);
-      });
+      return event.detail.result;
     },
     // Index item has been changed in the app somewhere..
     _indexUpdated: function(e) {
@@ -415,10 +409,9 @@ Custom property | Description | Default
       }
       var index = this.items.findIndex(obj => obj._id === item._id);
       if (index === -1) {
-        let it = this.items;
-        it.push(item);
-        it = this._prepareData(it);
-        this.set('items', it);
+        this.push('items', item);
+        this.items.sort(this._sortData);
+        this.$$('#list').render();
       } else {
         this.set(['item', index], item);
       }
