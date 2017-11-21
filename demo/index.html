@@ -30,6 +30,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   rest-api-menu {
     min-height: 600px;
   }
+
+  form input:not([type="submit"]) {
+    display: block;
+    width: 100%;
+  }
   </style>
 </head>
 
@@ -54,12 +59,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </div>
         </template>
       </div>
+      <fieldset>
+        <legend>Create REST API item</legend>
+        <form on-submit="_create" method="post">
+          <label for="apiTitle">API title</label>
+          <input id="apiTitle" type="text" name="title" value="My super API">
+          <label for="apiVersion">API version</label>
+          <input type="text" name="version" id="apiVersion" value="v1">
+          <label for="apiBaseUri">Base URI</label>
+          <input type="url" name="baseUri" id="apiBaseUri" value="[[generatedUrl]]">
+          <label for="apiOrder">Order on the list</label>
+          <input type="number" min="0" name="order" id="apiOrder" value="0">
+          <input type="submit" value="Send event">
+        </form>
+      </fieldset>
+    </div>
   </template>
   <paper-toast id="genToast" text="The request data has been generated"></paper-toast>
   <paper-toast id="delToast" text="The request data has been removed"></paper-toast>
   <paper-toast id="navToast" text="" duration="7000"></paper-toast>
   <script>
-  /* global DataGenerator */
+  /* global DataGenerator, chance */
   window.addEventListener('navigate', function(e) {
     var toast = document.getElementById('navToast');
     var d = e.detail;
@@ -69,6 +89,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   (function(scope) {
     scope.selectedIndex = -1;
     scope.observers = ['_selectedChanged(selectedIndex)'];
+    scope.generatedUrl = chance.url();
     scope._selectedChanged = function(index) {
       index = Number(index);
       if (index === -1) {
@@ -104,6 +125,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
           document.body.dispatchEvent(e);
         });
+    };
+    scope._create = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var raml = {};
+      Array.from(e.target.elements).forEach(item => {
+        if (!item.name) {
+          return;
+        }
+        raml[item.name] = item.value;
+      });
+      var event = new CustomEvent('rest-api-create', {
+        detail: {
+          raml: raml
+        },
+        bubbles: true,
+        cancelable: true
+      });
+      document.body.dispatchEvent(event);
+      if (!event.defaultPrevented) {
+        window.alert('Model not found in the DOM');
+        return;
+      }
+      event.detail.result
+      .catch(cause => {
+        window.alert('Error: ' + cause.message);
+      });
     };
   })(document.getElementById('app'));
   </script>
