@@ -45,4 +45,6 @@ Custom property | Description | Default
 `--rest-api-menu-list-item` | Mixin applied to each list item | `{}`
 `--rest-api-menu-selected-item-background-color` | Background color of the selected list item | `rgba(255, 152, 0, 0.24)`
 `--rest-api-menu-name-label` | Mixin applied to the name label | `{}`
+`--arc-menu-empty-info-color` | Color applied to the empty info section | ``
+`--arc-menu-empty-info-title-color` | Color applied to the title in the empty info section | ``
 
