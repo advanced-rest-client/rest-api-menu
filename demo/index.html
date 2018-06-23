@@ -1,98 +1,87 @@
 <!doctype html>
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
 <html>
-
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
   <title>rest-api-menu demo</title>
-  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
   <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
   <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
   <link rel="import" href="../../arc-models/rest-api-model.html">
+  <link rel="import" href="../../app-pouchdb/pouchdb.html">
   <link rel="import" href="../rest-api-menu.html">
   <script src="data-generator.js"></script>
   <script src="../../chance/dist/chance.min.js"></script>
-  <style is="custom-style" include="demo-pages-shared-styles">
-  .vertical-section-container {
-    max-width: 600px;
-  }
+  <custom-style>
+    <style is="custom-style" include="demo-pages-shared-styles">
+    rest-api-menu {
+      min-height: 600px;
+    }
 
-  rest-api-menu {
-    min-height: 600px;
-  }
-
-  form input:not([type="submit"]) {
-    display: block;
-    width: 100%;
-  }
-  </style>
+    form input:not([type="submit"]) {
+      display: block;
+      width: 100%;
+    }
+    </style>
+  </custom-style>
 </head>
 
 <body unresolved>
-  <template is="dom-bind" id="app">
-    <div class="vertical-section-container centered">
-      <h3>The `rest-api-menu`</h3>
-      <rest-api-menu selected-api="[[selectedApi]]"></rest-api-menu>
-      <rest-api-model></rest-api-model>
-      <div class="controls">
-        <button on-tap="generate">Generate 100 requests items</button>
-        <button on-tap="delete">Clear data</button>
-        <button on-tap="refresh">Refresh data</button>
-        <div>
-          <label for="selectionIndex">Set project selected (by index)</label>
-          <input type="number" id="selectionIndex" min="0" title="Set project selected" value="{{selectedIndex::input}}" />
-        </div>
-        <template is="dom-if" if="[[displayRequestSelector]]">
+  <dom-bind id="app">
+    <template is="dom-bind">
+      <div class="vertical-section-container centered">
+        <h3>The `rest-api-menu`</h3>
+        <rest-api-menu selected-api="[[selectedApi]]"></rest-api-menu>
+        <rest-api-model></rest-api-model>
+        <div class="controls">
+          <button on-tap="generate">Generate 100 requests items</button>
+          <button on-tap="delete">Clear data</button>
+          <button on-tap="refresh">Refresh data</button>
           <div>
-            <label for="requestSelectionIndex">Set request selected for current project (by index)</label>
-            <input type="number" id="requestSelectionIndex" min="0" title="Set request slected" on-input="_selectedRequestChanged" />
+            <label for="selectionIndex">Set project selected (by index)</label>
+            <input type="number" id="selectionIndex" min="0" title="Set project selected" on-input="_selectedIndexChanged" />
           </div>
-        </template>
+          <template is="dom-if" if="[[displayRequestSelector]]">
+            <div>
+              <label for="requestSelectionIndex">Set request selected for current project (by index)</label>
+              <input type="number" id="requestSelectionIndex" min="0" title="Set request slected" on-input="_selectedRequestChanged" />
+            </div>
+          </template>
+        </div>
+        <fieldset>
+          <legend>Create REST API item</legend>
+          <form on-submit="_create" method="post">
+            <label for="apiTitle">API title</label>
+            <input id="apiTitle" type="text" name="title" value="My super API">
+            <label for="apiVersion">API version</label>
+            <input type="text" name="version" id="apiVersion" value="v1">
+            <label for="apiBaseUri">Base URI</label>
+            <input type="url" name="baseUri" id="apiBaseUri" value="[[generatedUrl]]">
+            <label for="apiOrder">Order on the list</label>
+            <input type="number" min="0" name="order" id="apiOrder" value="0">
+            <input type="submit" value="Send event">
+          </form>
+        </fieldset>
       </div>
-      <fieldset>
-        <legend>Create REST API item</legend>
-        <form on-submit="_create" method="post">
-          <label for="apiTitle">API title</label>
-          <input id="apiTitle" type="text" name="title" value="My super API">
-          <label for="apiVersion">API version</label>
-          <input type="text" name="version" id="apiVersion" value="v1">
-          <label for="apiBaseUri">Base URI</label>
-          <input type="url" name="baseUri" id="apiBaseUri" value="[[generatedUrl]]">
-          <label for="apiOrder">Order on the list</label>
-          <input type="number" min="0" name="order" id="apiOrder" value="0">
-          <input type="submit" value="Send event">
-        </form>
-      </fieldset>
-    </div>
-  </template>
+    </template>
+  </dom-bind>
   <paper-toast id="genToast" text="The request data has been generated"></paper-toast>
   <paper-toast id="delToast" text="The request data has been removed"></paper-toast>
   <paper-toast id="navToast" text="" duration="7000"></paper-toast>
   <script>
   /* global DataGenerator, chance */
   window.addEventListener('navigate', function(e) {
-    var toast = document.getElementById('navToast');
-    var d = e.detail;
+    const toast = document.getElementById('navToast');
+    const d = e.detail;
     toast.text = 'Navigation ocurred to: ' + d.base + ', and id: ' + d.id;
     toast.opened = true;
   });
   (function(scope) {
-    scope.selectedIndex = -1;
-    scope.observers = ['_selectedChanged(selectedIndex)'];
     scope.generatedUrl = chance.url();
-    scope._selectedChanged = function(index) {
-      index = Number(index);
-      if (index === -1) {
+    scope._selectedIndexChanged = function(e) {
+      const index = Number(e.target.value);
+      if (index === -1 || isNaN(index)) {
         return;
       }
       // sets the ID of selected project
@@ -105,51 +94,51 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     };
     scope.generate = function() {
       DataGenerator.generateData(100)
-        .then(() => {
-          document.getElementById('genToast').opened = true;
-          scope.refresh();
-        });
+      .then(() => {
+        document.getElementById('genToast').opened = true;
+        scope.refresh();
+      });
     };
     scope.refresh = function() {
       document.querySelector('rest-api-menu').refresh();
     };
     scope.delete = function() {
       DataGenerator.destroyData()
-        .then(() => {
-          document.getElementById('delToast').opened = true;
-          var e = new CustomEvent('datastore-destroyed', {
-            bubbles: true,
-            detail: {
-              datastore: 'rest-api-index'
-            }
-          });
-          document.body.dispatchEvent(e);
+      .then(() => {
+        document.getElementById('delToast').opened = true;
+        const e = new CustomEvent('datastore-destroyed', {
+          bubbles: true,
+          detail: {
+            datastore: 'rest-api-index'
+          }
         });
+        document.body.dispatchEvent(e);
+      });
     };
     scope._create = function(e) {
       e.preventDefault();
       e.stopPropagation();
-      var raml = {};
+      const raml = {};
       Array.from(e.target.elements).forEach(item => {
         if (!item.name) {
           return;
         }
         raml[item.name] = item.value;
       });
-      var event = new CustomEvent('rest-api-create', {
+      const ev = new CustomEvent('rest-api-create', {
         detail: {
           raml: raml
         },
         bubbles: true,
         cancelable: true
       });
-      document.body.dispatchEvent(event);
-      if (!event.defaultPrevented) {
+      document.body.dispatchEvent(ev);
+      if (!ev.defaultPrevented) {
         window.alert('Model not found in the DOM');
         return;
       }
-      event.detail.result
-      .catch(cause => {
+      ev.detail.result
+      .catch((cause) => {
         window.alert('Error: ' + cause.message);
       });
     };
