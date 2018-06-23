@@ -1,6 +1,6 @@
 <!--
 @license
-Copyright 2016 The Advanced REST client authors <arc@mulesoft.com>
+Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
 use this file except in compliance with the License. You may obtain a copy of
 the License at
@@ -16,57 +16,6 @@ the License.
 <link rel="import" href="../paper-toast/paper-toast.html">
 <link rel="import" href="../paper-item/paper-item.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
-<!--
-A quick access menu for REST API projects
-
-A list of REST APIs in the ARC main menu.
-The element uses direct implementation of the PouchDB to make a query to the
-datastore.
-It also listens to `datastore-destroyed` custom event update state of the list
-items when datastore was destroyed.
-
-It listens for `selected-rest-api-changed` custom event as an alternative
-to setting `selectedApi` property directly on the element.
-
-### Example
-
-```html
-<rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
-```
-
-### Datastore access
-
-This element uses events API to access datastore data. This is provided by the
-`arc-models/rest-api-model` element. See documentation for this element if you
-need to implement own data exchange logic.
-
-Datastore element is not in the shadow DOM of this element and is should be
-included in the application DOM.
-
-```html
-<link rel="import" href="bower_components/arc-models/rest-api-model.html">
-<link rel="import" href="bower_components/rest-api-menu/rest-api-menu.html">
-<rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
-<rest-api-model></rest-api-model>
-```
-
-### Styling
-`<rest-api-menu>` provides the following custom properties and mixins for styling:
-
-Custom property | Description | Default
-----------------|-------------|----------
-`--rest-api-menu` | Mixin applied to the element | `{}`
-`--rest-api-menu-background-color` | Background color of the menu | `#f7f7f7`
-`--rest-api-menu-list-item` | Mixin applied to each list item | `{}`
-`--rest-api-menu-selected-item-background-color` | Background color of the selected list item | `rgba(255, 152, 0, 0.24)`
-`--rest-api-menu-name-label` | Mixin applied to the name label | `{}`
-`--arc-menu-empty-info-color` | Color applied to the empty info section | ``
-`--arc-menu-empty-info-title-color` | Color applied to the title in the empty info section | ``
-
-@group UI Elements
-@element rest-api-menu
-@demo demo/index.html
--->
 <dom-module id="rest-api-menu">
   <template>
     <style>
@@ -154,6 +103,58 @@ Custom property | Description | Default
     <paper-toast id="reorderError" class="error-toast" text="Unable to reorder items. Please, report an issue."></paper-toast>
   </template>
   <script>
+  /**
+   * A quick access menu for REST API projects
+   *
+   * A list of REST APIs in the ARC main menu.
+   * The element uses direct implementation of the PouchDB to make a query to the
+   * datastore.
+   * It also listens to `datastore-destroyed` custom event update state of the list
+   * items when datastore was destroyed.
+   *
+   * It listens for `selected-rest-api-changed` custom event as an alternative
+   * to setting `selectedApi` property directly on the element.
+   *
+   * ### Example
+   *
+   * ```html
+   * <rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
+   * ```
+   *
+   * ### Datastore access
+   *
+   * This element uses events API to access datastore data. This is provided by the
+   * `arc-models/rest-api-model` element. See documentation for this element if you
+   * need to implement own data exchange logic.
+   *
+   * Datastore element is not in the shadow DOM of this element and is should be
+   * included in the application DOM.
+   *
+   * ```html
+   * <link rel="import" href="bower_components/arc-models/rest-api-model.html">
+   * <link rel="import" href="bower_components/rest-api-menu/rest-api-menu.html">
+   * <rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
+   * <rest-api-model></rest-api-model>
+   * ```
+   *
+   * ### Styling
+   * `<rest-api-menu>` provides the following custom properties and mixins for styling:
+   *
+   * Custom property | Description | Default
+   * ----------------|-------------|----------
+   * `--rest-api-menu` | Mixin applied to the element | `{}`
+   * `--rest-api-menu-background-color` | Background color of the menu | `#f7f7f7`
+   * `--rest-api-menu-list-item` | Mixin applied to each list item | `{}`
+   * `--rest-api-menu-selected-item-background-color` | Background color of the selected list item | `rgba(255, 152, 0, 0.24)`
+   * `--rest-api-menu-name-label` | Mixin applied to the name label | `{}`
+   * `--arc-menu-empty-info-color` | Color applied to the empty info section | ``
+   * `--arc-menu-empty-info-title-color` | Color applied to the title in the empty info section | ``
+   *
+   * @polymer
+   * @customElement
+   * @memberof UiElements
+   * @demo demo/index.html
+   */
   class RestApiMenu extends Polymer.Element {
     static get is() {return 'rest-api-menu';}
     static get properties() {
@@ -181,13 +182,6 @@ Custom property | Description | Default
         dataUnavailable: {
           type: Boolean,
           computed: '_computeDataUnavailable(hasItems, querying)'
-        },
-        // Event target for the model.
-        _eventTarget: {
-          type: Object,
-          value() {
-            return this;
-          }
         },
         // Currently selected project ID
         selectedApi: String,

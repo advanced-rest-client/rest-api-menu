@@ -6,17 +6,6 @@
 
 A quick access menu for REST API projects
 
-<!---
-```
-<custom-element-demo>
-  <template>
-    <link rel="import" href="rest-api-menu.html">
-    <next-code-block></next-code-block>
-  </template>
-</custom-element-demo>
-```
--->
-
 ```html
 <rest-api-menu></rest-api-menu>
 ```
