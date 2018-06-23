@@ -284,7 +284,8 @@ the License.
       const e = new CustomEvent('rest-api-index-list', {
         detail: detail,
         bubbles: true,
-        cancelable: true
+        cancelable: true,
+        composed: true
       });
       this.dispatchEvent(e);
       if (!e.defaultPrevented) {
@@ -384,7 +385,8 @@ the License.
           docs: items
         },
         bubbles: true,
-        cancelable: true
+        cancelable: true,
+        composed: true
       });
       this.dispatchEvent(e);
       return e.detail.result;
