@@ -110,7 +110,7 @@ the License.
     <dom-reorderer on-dom-order-changed="_onReorder">
       <template is="dom-repeat" items="[[items]]" id="list">
         <paper-item on-tap="_openAPI" title$="[[item.title]]" class$="[[_computeItemClass(item._id, selectedApi)]]">
-          <span class="name">[[item.title]], [[item.version]]</span>
+          <span class="name">[[item.title]]</span>
         </paper-item>
       </template>
     </dom-reorderer>
@@ -154,7 +154,7 @@ the License.
    * <rest-api-model></rest-api-model>
    * ```
    *
-   * ### StylingEEEEEE
+   * ### Styling
    * `<rest-api-menu>` provides the following custom properties and mixins for styling:
    *
    * Custom property | Description | Default
@@ -178,15 +178,20 @@ the License.
       return {
         /**
          * Saved items restored from the datastore.
+         * @type {Array<Object>}
          */
         items: Array,
-        // True when the element is querying the database for the data.
+        /**
+         * True when the element is querying the database for the data.
+         */
         querying: {
           type: Boolean,
           readOnly: true,
           notify: true
         },
-        // Computed value, true if the `items` property has values.
+        /**
+         * Computed value. `true` if the `items` property has values.
+         */
         hasItems: {
           type: Boolean,
           value: false,
@@ -219,8 +224,8 @@ the License.
       super.connectedCallback();
       window.addEventListener('datastore-destroyed', this._onDatabaseDestroy);
       window.addEventListener('selected-rest-api-changed', this._selecteApiHandler);
-      window.addEventListener('rest-api-index-updated', this._indexUpdated);
-      window.addEventListener('rest-api-deleted', this._indexDeleted);
+      window.addEventListener('api-index-changed', this._indexUpdated);
+      window.addEventListener('api-deleted', this._indexDeleted);
       if (!this.querying && !this.items) {
         this.makeQuery();
       }
@@ -228,10 +233,14 @@ the License.
 
     disconnectedCallback() {
       super.disconnectedCallback();
+      if (this.__queryTimeout) {
+        clearTimeout(this.__queryTimeout);
+        this.__queryTimeout = undefined;
+      }
       window.removeEventListener('datastore-destroyed', this._onDatabaseDestroy);
       window.removeEventListener('selected-rest-api-changed', this._selecteApiHandler);
-      window.removeEventListener('rest-api-index-updated', this._indexUpdated);
-      window.removeEventListener('rest-api-deleted', this._indexDeleted);
+      window.removeEventListener('api-index-changed', this._indexUpdated);
+      window.removeEventListener('api-deleted', this._indexDeleted);
     }
     /**
      * Resets the state of the variables.
@@ -239,6 +248,10 @@ the License.
     reset() {
       if (this.nextPageToken) {
         this.nextPageToken = undefined;
+      }
+      if (this.__queryTimeout) {
+        clearTimeout(this.__queryTimeout);
+        this.__queryTimeout = undefined;
       }
       this._setQuerying(false);
       this.set('items', []);
@@ -260,18 +273,23 @@ the License.
       if (typeof datastore === 'string') {
         datastore = [datastore];
       }
-      if (datastore.indexOf('rest-api-index') === -1 && datastore[0] !== 'all') {
+      if (datastore.indexOf('api-index') === -1 && datastore[0] !== 'all') {
         return;
       }
       this.refresh();
     }
     /**
      * Computes class name for the HTML element representing a saved item.
+     *
+     * @param {String} id An id to compare
+     * @param {String} selectedProject Currently selected API id
+     * @return {String}
      */
-    _computeItemClass(_id, selectedProject) {
-      if (_id && _id === selectedProject) {
+    _computeItemClass(id, selectedProject) {
+      if (id && id === selectedProject) {
         return 'iron-selected';
       }
+      return '';
     }
     // Computes value for the `hasItems` property.
     _computeHasItems(length) {
@@ -279,26 +297,33 @@ the License.
     }
     /**
      * The function to call when new query for data is needed.
+     * Use this intead of `loadPage()` as this function uses debouncer to
+     * prevent multiple calls at once.
      */
     makeQuery() {
       if (this.__makingQuery) {
         return;
       }
       this.__makingQuery = true;
-      setTimeout(() => {
+      this.__queryTimeout = setTimeout(() => {
+        this.__queryTimeout = undefined;
         this.__makingQuery = false;
-        this._loadPage();
+        this.loadPage();
       }, 20);
     }
     /**
      * Performs the query and processes the result.
+     * This function immediately queries the data model for data.
+     * It does this in a loop until all data are read.
+     *
+     * @return {Promise}
      */
-    _loadPage() {
+    loadPage() {
       const detail = {};
       if (this.nextPageToken) {
         detail.nextPageToken = this.nextPageToken;
       }
-      const e = new CustomEvent('rest-api-index-list', {
+      const e = new CustomEvent('api-index-list', {
         detail: detail,
         bubbles: true,
         cancelable: true,
@@ -307,7 +332,7 @@ the License.
       this.dispatchEvent(e);
       if (!e.defaultPrevented) {
         this._setQuerying(false);
-        console.warn('REST API model detached from the dom.');
+        console.warn('REST API model not in the DOM.');
         return;
       }
       return e.detail.result
@@ -327,17 +352,25 @@ the License.
           const concat = this.items.concat(items);
           concat.sort(this._sortData);
           this.set('items', concat);
-          this.shadowRoot.querySelector('#list').render();
+          this._renderList();
         }
-        setTimeout(() => this._loadPage(), 50);
+        this.makeQuery();
       })
       .catch((e) => {
         this._setQuerying(false);
         console.error('Query menu items', e);
       });
     }
+
+    _renderList() {
+      this.shadowRoot.querySelector('#list').render();
+    }
     /**
      * Sorts projects list by `order` and the `title` properties.
+     *
+     * @param {Object} a
+     * @param {Object} b
+     * @return {Number}
      */
     _sortData(a, b) {
       if (a.order < b.order) {
@@ -358,25 +391,34 @@ the License.
       e.stopPropagation();
       e.stopImmediatePropagation();
       const id = e.model.get('item._id');
+      const version = e.model.get('item.latest');
       this.dispatchEvent(new CustomEvent('navigate', {
         bubbles: true,
         composed: true,
         detail: {
           base: 'api-console',
-          id: id
+          id,
+          version
         }
       }));
     }
-    // Handler for the `selected-rest-api-changed` event
+    /**
+     * Handler for the `selected-rest-api-changed` event.
+     * It expects the detail object to have `value` property with selection id.
+     * @param {CustomEvent} e
+     */
     _selecteApiHandler(e) {
       const id = e.detail.value;
       if (id && id !== this.selectedApi) {
         this.set('selectedApi', id);
-      } else {
+      } else if (!id) {
         this.set('selectedApi', '');
       }
     }
-    // Handler for the list reorder event. Updates items order in the datastore.
+    /**
+     * Handler for the list reorder event.
+     * Updates items order in the datastore.
+     */
     _onReorder() {
       const items = this.items;
       const update = [];
@@ -387,19 +429,22 @@ the License.
         }
       });
       this._updateBulk(update)
-      .then(() => {
-        this.shadowRoot.querySelector('#list').render();
-      })
+      .then(() => this._renderList())
       .catch((cause) => {
         this.$.reorderError.opened = true;
         console.error(cause);
       });
     }
-    // Updates requests in bulk opeartion.
+    /**
+     * Updates APIs data in bulk operation.
+     *
+     * @param {Array<Object>} items List of index object to update
+     * @return {Promise}
+     */
     _updateBulk(items) {
-      const e = new CustomEvent('rest-api-index-updated-batch', {
+      const e = new CustomEvent('api-index-changed-batch', {
         detail: {
-          docs: items
+          items
         },
         bubbles: true,
         cancelable: true,
@@ -408,27 +453,39 @@ the License.
       this.dispatchEvent(e);
       return e.detail.result;
     }
-    // Index item has been changed in the app somewhere..
+    /**
+     * Index item has been changed and should be updated / added.
+     * Only non-cancelable event is considered.
+     * @param {CustomEvent} e
+     */
     _indexUpdated(e) {
-      if (!this.items) {
+      if (e.cancelable) {
         return;
       }
-      const item = e.detail.doc;
+      const item = e.detail.apiInfo;
       if (!this.items) {
         this.set('items', [item]);
+        this._renderList();
         return;
       }
-      const index = this.items.findIndex(obj => obj._id === item._id);
+      const index = this.items.findIndex((obj) => obj._id === item._id);
       if (index === -1) {
         this.push('items', item);
         this.items.sort(this._sortData);
-        this.shadowRoot.querySelector('#list').render();
+        this._renderList();
       } else {
-        this.set(['item', index], item);
+        this.set(['items', index], item);
       }
     }
-    // Handler for the deleted event
+    /**
+     * Handler for API delete event.
+     * Only non-cancelable event is considered.
+     * @param {CustomEvent} e
+     */
     _indexDeleted(e) {
+      if (e.cancelable) {
+        return;
+      }
       const items = this.items;
       if (!items || !items.length) {
         return;
@@ -439,6 +496,7 @@ the License.
         return;
       }
       this.splice('items', index, 1);
+      this._renderList();
     }
   }
   window.customElements.define(RestApiMenu.is, RestApiMenu);

@@ -112,7 +112,7 @@
         const e = new CustomEvent('datastore-destroyed', {
           bubbles: true,
           detail: {
-            datastore: 'rest-api-index'
+            datastore: 'api-index'
           }
         });
         document.body.dispatchEvent(e);
@@ -121,19 +121,24 @@
     scope._create = function(e) {
       e.preventDefault();
       e.stopPropagation();
-      const raml = {};
-      Array.from(e.target.elements).forEach((item) => {
-        if (!item.name) {
-          return;
-        }
-        raml[item.name] = item.value;
-      });
-      const ev = new CustomEvent('rest-api-create', {
+      const title = document.getElementById('apiTitle').value;
+      const version = document.getElementById('apiVersion').value;
+      const baseUri = document.getElementById('apiBaseUri').value;
+      const order = Number(document.getElementById('apiOrder').value);
+      const apiInfo = {
+        _id: baseUri,
+        title,
+        order,
+        latest: version,
+        versions: [version]
+      };
+      const ev = new CustomEvent('api-index-changed', {
         detail: {
-          raml: raml
+          apiInfo
         },
         bubbles: true,
-        cancelable: true
+        cancelable: true,
+        composed: true
       });
       document.body.dispatchEvent(ev);
       if (!ev.defaultPrevented) {
@@ -141,6 +146,24 @@
         return;
       }
       ev.detail.result
+      .then(() => {
+        const e = new CustomEvent('api-data-changed', {
+          detail: {
+            indexId: baseUri,
+            version,
+            data: {}
+          },
+          bubbles: true,
+          cancelable: true,
+          composed: true
+        });
+        document.body.dispatchEvent(e);
+        if (!e.defaultPrevented) {
+          window.alert('Model not found in the DOM');
+          return;
+        }
+        return e.detail.result;
+      })
       .catch((cause) => {
         window.alert('Error: ' + cause.message);
       });
