@@ -1,6 +1,6 @@
 <!--
 @license
-Copyright 2016 The Advanced REST client authors <arc@mulesoft.com>
+Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
 use this file except in compliance with the License. You may obtain a copy of
 the License at
@@ -11,70 +11,18 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 -->
-<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../polymer/polymer-element.html">
 <link rel="import" href="../dom-reorderer/dom-reorderer.html">
 <link rel="import" href="../paper-toast/paper-toast.html">
-<link rel="import" href="../openable-panel-behavior/openable-panel-behavior.html">
 <link rel="import" href="../paper-item/paper-item.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
-<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
-<!--
-A quick access menu for REST API projects
-
-A list of REST APIs in the ARC main menu.
-The element uses direct implementation of the PouchDB to make a query to the
-datastore.
-It also listens to `datastore-destroyed` custom event update state of the list
-items when datastore was destroyed.
-
-It listens for `selected-rest-api-changed` custom event as an alternative
-to setting `selectedApi` property directly on the element.
-
-### Example
-
-```html
-<rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
-```
-
-### Datastore access
-
-This element uses events API to access datastore data. This is provided by the
-`arc-models/rest-api-model` element. See documentation for this element if you
-need to implement own data exchange logic.
-
-Datastore element is not in the shadow DOM of this element and is should be
-included in the application DOM.
-
-```html
-<link rel="import" href="bower_components/arc-models/rest-api-model.html">
-<link rel="import" href="bower_components/rest-api-menu/rest-api-menu.html">
-<rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
-<rest-api-model></rest-api-model>
-```
-
-### Styling
-`<rest-api-menu>` provides the following custom properties and mixins for styling:
-
-Custom property | Description | Default
-----------------|-------------|----------
-`--rest-api-menu` | Mixin applied to the element | `{}`
-`--rest-api-menu-background-color` | Background color of the menu | `#f7f7f7`
-`--rest-api-menu-list-item` | Mixin applied to each list item | `{}`
-`--rest-api-menu-selected-item-background-color` | Background color of the selected list item | `rgba(255, 152, 0, 0.24)`
-`--rest-api-menu-name-label` | Mixin applied to the name label | `{}`
-`--arc-menu-empty-info-color` | Color applied to the empty info section | ``
-`--arc-menu-empty-info-title-color` | Color applied to the title in the empty info section | ``
-
-@group UI Elements
-@element rest-api-menu
-@demo demo/index.html
--->
+<link rel="import" href="../arc-file-drop-mixin/arc-file-drop-mixin.html">
 <dom-module id="rest-api-menu">
   <template>
     <style>
     :host {
       display: block;
-      background-color: var(--rest-api-menu-background-color, #f7f7f7);
+      background-color: var(--rest-api-menu-background-color, inherit);
       position: relative;
       overflow: auto;
       @apply --layout-flex;
@@ -138,173 +86,278 @@ Custom property | Description | Default
     [hidden] {
       display: none !important;
     }
+
+    .drop-target {
+      display: none;
+      z-index: 100;
+    }
+
+    :host([dragging]) .drop-target {
+      display: block;
+      @apply --layout-fit;
+      @apply --layout-vertical;
+      @apply --layout-center;
+      background-color: #fff;
+      border: 4px var(--drop-file-importer-header-background-color, var(--primary-color)) solid;
+    }
     </style>
     <paper-progress hidden$="[[!querying]]" indeterminate></paper-progress>
     <template is="dom-if" if="[[dataUnavailable]]">
       <div class="empty-message">
-        <h3 class="empty-title">Drag and drop RAML project here</h3>
+        <h3 class="empty-title">Drop API project here</h3>
+        <p class="empty-info">There is no API stored with the application</p>
       </div>
     </template>
     <dom-reorderer on-dom-order-changed="_onReorder">
       <template is="dom-repeat" items="[[items]]" id="list">
         <paper-item on-tap="_openAPI" title$="[[item.title]]" class$="[[_computeItemClass(item._id, selectedApi)]]">
-          <span class="name">[[item.title]], [[item.version]]</span>
+          <span class="name">[[item.title]]</span>
         </paper-item>
       </template>
     </dom-reorderer>
     <paper-toast id="reorderError" class="error-toast" text="Unable to reorder items. Please, report an issue."></paper-toast>
+    <section class="drop-target">
+      <p class="drop-message">Drop file here</p>
+    </section>
   </template>
   <script>
-  Polymer({
-    is: 'rest-api-menu',
+  /**
+   * A quick access menu for REST API projects
+   *
+   * A list of REST APIs in the ARC main menu.
+   * The element uses direct implementation of the PouchDB to make a query to the
+   * datastore.
+   * It also listens to `datastore-destroyed` custom event update state of the list
+   * items when datastore was destroyed.
+   *
+   * It listens for `selected-rest-api-changed` custom event as an alternative
+   * to setting `selectedApi` property directly on the element.
+   *
+   * ### Example
+   *
+   * ```html
+   * <rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
+   * ```
+   *
+   * ### Datastore access
+   *
+   * This element uses events API to access datastore data. This is provided by the
+   * `arc-models/rest-api-model` element. See documentation for this element if you
+   * need to implement own data exchange logic.
+   *
+   * Datastore element is not in the shadow DOM of this element and is should be
+   * included in the application DOM.
+   *
+   * ```html
+   * <link rel="import" href="bower_components/arc-models/rest-api-model.html">
+   * <link rel="import" href="bower_components/rest-api-menu/rest-api-menu.html">
+   * <rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
+   * <rest-api-model></rest-api-model>
+   * ```
+   *
+   * ### Styling
+   * `<rest-api-menu>` provides the following custom properties and mixins for styling:
+   *
+   * Custom property | Description | Default
+   * ----------------|-------------|----------
+   * `--rest-api-menu` | Mixin applied to the element | `{}`
+   * `--rest-api-menu-background-color` | Background color of the menu | `inherit`
+   * `--rest-api-menu-list-item` | Mixin applied to each list item | `{}`
+   * `--rest-api-menu-selected-item-background-color` | Background color of the selected list item | `rgba(255, 152, 0, 0.24)`
+   * `--rest-api-menu-name-label` | Mixin applied to the name label | `{}`
+   * `--arc-menu-empty-info-color` | Color applied to the empty info section | ``
+   * `--arc-menu-empty-info-title-color` | Color applied to the title in the empty info section | ``
+   *
+   * @polymer
+   * @customElement
+   * @memberof UiElements
+   * @demo demo/index.html
+   */
+  class RestApiMenu extends ArcComponents.ArcFileDropMixin(Polymer.Element) {
+    static get is() {return 'rest-api-menu';}
+    static get properties() {
+      return {
+        /**
+         * Saved items restored from the datastore.
+         * @type {Array<Object>}
+         */
+        items: Array,
+        /**
+         * True when the element is querying the database for the data.
+         */
+        querying: {
+          type: Boolean,
+          readOnly: true,
+          notify: true
+        },
+        /**
+         * Computed value. `true` if the `items` property has values.
+         */
+        hasItems: {
+          type: Boolean,
+          value: false,
+          computed: '_computeHasItems(items.length)',
+          notify: true
+        },
+        /**
+         * Computed value. True if query ended and there's no results.
+         */
+        dataUnavailable: {
+          type: Boolean,
+          computed: '_computeDataUnavailable(hasItems, querying)'
+        },
+        // Currently selected project ID
+        selectedApi: String,
+        // Page token for datastore pagination
+        nextPageToken: String,
+        /**
+         * When set the element won't query for APIs data when connected to the DOM.
+         * In this case manually call `makeQuery()`
+         */
+        noAutoQuery: Boolean
+      };
+    }
 
-    behaviors: [
-      Polymer.IronResizableBehavior,
-      ArcBehaviors.OpenablePanelBehavior
-    ],
+    constructor() {
+      super();
+      this._onDatabaseDestroy = this._onDatabaseDestroy.bind(this);
+      this._selecteApiHandler = this._selecteApiHandler.bind(this);
+      this._indexUpdated = this._indexUpdated.bind(this);
+      this._indexDeleted = this._indexDeleted.bind(this);
+    }
 
-    properties: {
-      /**
-       * Saved items restored from the datastore.
-       */
-      items: Array,
-      // True when the element is querying the database for the data.
-      querying: {
-        type: Boolean,
-        readOnly: true,
-        notify: true
-      },
-      // Computed value, true if the `items` property has values.
-      hasItems: {
-        type: Boolean,
-        value: false,
-        computed: '_computeHasItems(items.length)',
-        notify: true
-      },
-      /**
-       * Computed value. True if query ended and there's no results.
-       */
-      dataUnavailable: {
-        type: Boolean,
-        computed: '_computeDataUnavailable(hasItems, querying)'
-      },
-      // Event target for the model.
-      _eventTarget: {
-        type: Object,
-        value: function() {
-          return this;
-        }
-      },
-      // Currently selected project ID
-      selectedApi: String,
-      // Page token for datastore pagination
-      nextPageToken: String
-    },
+    connectedCallback() {
+      super.connectedCallback();
+      window.addEventListener('datastore-destroyed', this._onDatabaseDestroy);
+      window.addEventListener('selected-rest-api-changed', this._selecteApiHandler);
+      window.addEventListener('api-index-changed', this._indexUpdated);
+      window.addEventListener('api-deleted', this._indexDeleted);
+      if (!this.querying && !this.items) {
+        this.makeQuery();
+      }
+    }
 
-    observers: [
-      '_requery(_isOpened)',
-    ],
-
-    attached: function() {
-      this.listen(window, 'datastore-destroyed', '_onDatabaseDestroy');
-      this.listen(window, 'selected-rest-api-changed', '_selecteApiHandler');
-      this.listen(window, 'rest-api-index-updated', '_indexUpdated');
-      this.listen(window, 'rest-api-deleted', '_indexDeleted');
-    },
-
-    detached: function() {
-      this.unlisten(window, 'datastore-destroyed', '_onDatabaseDestroy');
-      this.unlisten(window, 'selected-rest-api-changed', '_selecteApiHandler');
-      this.unlisten(window, 'rest-api-index-updated', '_indexUpdated');
-      this.unlisten(window, 'rest-api-deleted', '_indexDeleted');
-    },
-
+    disconnectedCallback() {
+      super.disconnectedCallback();
+      if (this.__queryTimeout) {
+        clearTimeout(this.__queryTimeout);
+        this.__queryTimeout = undefined;
+      }
+      window.removeEventListener('datastore-destroyed', this._onDatabaseDestroy);
+      window.removeEventListener('selected-rest-api-changed', this._selecteApiHandler);
+      window.removeEventListener('api-index-changed', this._indexUpdated);
+      window.removeEventListener('api-deleted', this._indexDeleted);
+    }
     /**
      * Resets the state of the variables.
      */
-    reset: function() {
+    reset() {
       if (this.nextPageToken) {
         this.nextPageToken = undefined;
       }
+      if (this.__queryTimeout) {
+        clearTimeout(this.__queryTimeout);
+        this.__queryTimeout = undefined;
+      }
       this._setQuerying(false);
       this.set('items', []);
-    },
-
+    }
     /**
      * Refreshes the data from the datastore.
      * It resets the query options, clears items and makes a query to the datastore.
      */
-    refresh: function() {
+    refresh() {
       this.reset();
       this.makeQuery();
-    },
-
-    _requery: function(_isOpened) {
-      if (_isOpened && !this.items && !this.querying) {
-        this.makeQuery();
-      }
-    },
-
+    }
     // Handler for the `datastore-destroyed` custom event
-    _onDatabaseDestroy: function(e) {
-      var datastore = e.detail.datastore;
+    _onDatabaseDestroy(e) {
+      let datastore = e.detail.datastore;
       if (!datastore || !datastore.length) {
         return;
       }
       if (typeof datastore === 'string') {
         datastore = [datastore];
       }
-      if (datastore.indexOf('rest-api-index') === -1 && datastore[0] !== 'all') {
+      if (datastore.indexOf('api-index') === -1 && datastore[0] !== 'all') {
         return;
       }
       this.refresh();
-    },
-
+    }
     /**
      * Computes class name for the HTML element representing a saved item.
+     *
+     * @param {String} id An id to compare
+     * @param {String} selectedProject Currently selected API id
+     * @return {String}
      */
-    _computeItemClass: function(_id, selectedProject) {
-      if (_id && _id === selectedProject) {
+    _computeItemClass(id, selectedProject) {
+      if (id && id === selectedProject) {
         return 'iron-selected';
       }
-    },
+      return '';
+    }
     // Computes value for the `hasItems` property.
-    _computeHasItems: function(length) {
+    _computeHasItems(length) {
       return !!(length);
-    },
-
+    }
     /**
      * The function to call when new query for data is needed.
+     * Use this intead of `loadPage()` as this function uses debouncer to
+     * prevent multiple calls at once.
      */
-    makeQuery: function() {
-      this.debounce('menu-load-rest-apis', this._loadPage, 20);
-    },
-    /**
-     * Performs the query and processes the result.
-     */
-    _loadPage: function() {
-      var detail = {};
+    makeQuery() {
+      if (this.__makingQuery) {
+        return;
+      }
+      this.__makingQuery = true;
+      this.__queryTimeout = setTimeout(() => {
+        this.__queryTimeout = undefined;
+        this.__makingQuery = false;
+        this.loadPage();
+      }, 20);
+    }
+
+    _dispatchApiList(detail) {
+      const e = new CustomEvent('api-index-list', {
+        detail,
+        bubbles: true,
+        cancelable: true,
+        composed: true
+      });
+      this.dispatchEvent(e);
+      return e;
+    }
+
+    _getApiListDetail() {
+      const detail = {};
       if (this.nextPageToken) {
         detail.nextPageToken = this.nextPageToken;
       }
-      var event = new CustomEvent('rest-api-index-list', {
-        detail: detail,
-        bubbles: true,
-        cancelable: true
-      });
-      this.dispatchEvent(event);
-      if (!event.defaultPrevented) {
+      return detail;
+    }
+    /**
+     * Performs the query and processes the result.
+     * This function immediately queries the data model for data.
+     * It does this in a loop until all data are read.
+     *
+     * @return {Promise}
+     */
+    loadPage() {
+      const detail = this._getApiListDetail();
+      const e = this._dispatchApiList(detail);
+      if (!e.defaultPrevented) {
         this._setQuerying(false);
-        console.warn('REST API model detached from the dom.');
-        return;
+        console.warn('REST API model not in the DOM.');
+        return Promise.reject(new Error('Model not found'));
       }
-      return event.detail.result
-      .then(result => {
+      return e.detail.result
+      .then((result) => {
         this._setQuerying(false);
         this.nextPageToken = result.nextPageToken;
         return result.items;
       })
-      .then(items => {
+      .then((items) => {
         if (!items || !items.length) {
           return;
         }
@@ -312,68 +365,79 @@ Custom property | Description | Default
           items.sort(this._sortData);
           this.set('items', items);
         } else {
-          var concat = this.items.concat(items);
+          const concat = this.items.concat(items);
           concat.sort(this._sortData);
           this.set('items', concat);
-          this.$$('#list').render();
+          this._renderList();
         }
-        this.async(() => {
-          this._loadPage();
-        }, 50);
+        this.makeQuery();
       })
       .catch((e) => {
         this._setQuerying(false);
-        this.fire('app-log', {
-          message: ['Query menu items', e],
-          level: 'error'
-        });
-        console.error('Query menu items', e);
+        console.warn('Query menu items', e);
       });
-    },
+    }
 
+    _renderList() {
+      this.shadowRoot.querySelector('#list').render();
+    }
     /**
      * Sorts projects list by `order` and the `title` properties.
+     *
+     * @param {Object} a
+     * @param {Object} b
+     * @return {Number}
      */
-    _sortData: function(a, b) {
+    _sortData(a, b) {
       if (a.order < b.order) {
         return -1;
       }
       if (a.order > b.order) {
         return 1;
       }
-      return a.title.localeCompare(b.title);
-    },
-
+      return (a.title || '').localeCompare(b.title);
+    }
     // Computes value for the `dataUnavailable` property.
-    _computeDataUnavailable: function(hasItems, querying) {
+    _computeDataUnavailable(hasItems, querying) {
       return !hasItems && !querying;
-    },
-
+    }
     // Handler for the `tap` event on the item.
-    _openAPI: function(e) {
+    _openAPI(e) {
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      var id = e.model.get('item._id');
-      this.fire('navigate', {
-        base: 'api-console',
-        id: id
-      });
-    },
-    // Handler for the `selected-rest-api-changed` event
-    _selecteApiHandler: function(e) {
-      var id = e.detail.value;
+      const id = e.model.get('item._id');
+      const version = e.model.get('item.latest');
+      this.dispatchEvent(new CustomEvent('navigate', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          base: 'api-console',
+          id,
+          version
+        }
+      }));
+    }
+    /**
+     * Handler for the `selected-rest-api-changed` event.
+     * It expects the detail object to have `value` property with selection id.
+     * @param {CustomEvent} e
+     */
+    _selecteApiHandler(e) {
+      const id = e.detail.value;
       if (id && id !== this.selectedApi) {
         this.set('selectedApi', id);
-      } else {
+      } else if (!id) {
         this.set('selectedApi', '');
       }
-    },
-
-    // Handler for the list reorder event. Updates items order in the datastore.
-    _onReorder: function() {
-      var items = this.items;
-      var update = [];
+    }
+    /**
+     * Handler for the list reorder event.
+     * Updates items order in the datastore.
+     */
+    _onReorder() {
+      const items = this.items;
+      const update = [];
       items.forEach((item, index) => {
         if (item.order !== index) {
           item.order = index;
@@ -381,58 +445,76 @@ Custom property | Description | Default
         }
       });
       this._updateBulk(update)
-      .then(() => {
-        this.$$('#list').render();
-      })
-      .catch(cause => {
+      .then(() => this._renderList())
+      .catch((cause) => {
         this.$.reorderError.opened = true;
         console.error(cause);
       });
-    },
-    // Updates requests in bulk opeartion.
-    _updateBulk: function(items) {
-      var event = new CustomEvent('rest-api-index-updated-batch', {
+    }
+    /**
+     * Updates APIs data in bulk operation.
+     *
+     * @param {Array<Object>} items List of index object to update
+     * @return {Promise}
+     */
+    _updateBulk(items) {
+      const e = new CustomEvent('api-index-changed-batch', {
         detail: {
-          docs: items
+          items
         },
         bubbles: true,
-        cancelable: true
+        cancelable: true,
+        composed: true
       });
-      this.dispatchEvent(event);
-      return event.detail.result;
-    },
-    // Index item has been changed in the app somewhere..
-    _indexUpdated: function(e) {
-      if (!this.items && !this._isOpened) {
+      this.dispatchEvent(e);
+      return e.detail.result;
+    }
+    /**
+     * Index item has been changed and should be updated / added.
+     * Only non-cancelable event is considered.
+     * @param {CustomEvent} e
+     */
+    _indexUpdated(e) {
+      if (e.cancelable) {
         return;
       }
-      var item = e.detail.doc;
+      const item = e.detail.apiInfo;
       if (!this.items) {
         this.set('items', [item]);
+        this._renderList();
         return;
       }
-      var index = this.items.findIndex(obj => obj._id === item._id);
+      const index = this.items.findIndex((obj) => obj._id === item._id);
       if (index === -1) {
         this.push('items', item);
         this.items.sort(this._sortData);
-        this.$$('#list').render();
+        this._renderList();
       } else {
-        this.set(['item', index], item);
+        this.set(['items', index], item);
       }
-    },
-    // Handler for the deleted event
-    _indexDeleted: function(e) {
-      var items = this.items;
+    }
+    /**
+     * Handler for API delete event.
+     * Only non-cancelable event is considered.
+     * @param {CustomEvent} e
+     */
+    _indexDeleted(e) {
+      if (e.cancelable) {
+        return;
+      }
+      const items = this.items;
       if (!items || !items.length) {
         return;
       }
-      var id = e.detail.id;
-      var index = items.findIndex(item => item._id === id);
+      const id = e.detail.id;
+      const index = items.findIndex((item) => item._id === id);
       if (index === -1) {
         return;
       }
       this.splice('items', index, 1);
+      this._renderList();
     }
-  });
+  }
+  window.customElements.define(RestApiMenu.is, RestApiMenu);
   </script>
 </dom-module>

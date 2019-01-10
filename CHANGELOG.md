@@ -1,3 +1,21 @@
+<a name="2.0.0"></a>
+# [2.0.0](https://github.com/advanced-rest-client/rest-api-menu/compare/0.1.12...2.0.0) (2019-01-10)
+
+
+### Breaking
+
+* Updating the component for new API model ([25946a30c8fdf5a5cfb61fae6feae1c80e0c8829](https://github.com/advanced-rest-client/rest-api-menu/commit/25946a30c8fdf5a5cfb61fae6feae1c80e0c8829))
+
+### Docs
+
+* Updating documentation. ([45644902db23214818a0d8b9fa9ed174675ccacf](https://github.com/advanced-rest-client/rest-api-menu/commit/45644902db23214818a0d8b9fa9ed174675ccacf))
+
+### Fix
+
+* Fixing empty state class list ([09fcd988788481fdb9183a4ae712fddb76cee755](https://github.com/advanced-rest-client/rest-api-menu/commit/09fcd988788481fdb9183a4ae712fddb76cee755))
+
+
+
 <a name="0.1.13"></a>
 ## [0.1.13](https://github.com/advanced-rest-client/rest-api-menu/compare/0.1.12...0.1.13) (2018-01-30)
 
