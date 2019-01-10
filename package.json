@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "description": "A quick access menu for REST API projects",
   "devDependencies": {
-    "@polymer/gen-typescript-declarations": "^1.1.1"
+    "@polymer/gen-typescript-declarations": "^1.5.1"
   },
   "private": false,
   "main": "rest-api-menu.html",
@@ -25,8 +25,5 @@
   "authors": [
     "Pawel Psztyc",
     "The Advanced REST client authors <arc@mulesoft.com>"
-  ],
-  "dependencies": {
-    "eslint-config-google": "^0.9.1"
-  }
+  ]
 }

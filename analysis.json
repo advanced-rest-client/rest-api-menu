@@ -1,0 +1,774 @@
+{
+  "schema_version": "1.0.0",
+  "elements": [
+    {
+      "description": "A quick access menu for REST API projects\n\nA list of REST APIs in the ARC main menu.\nThe element uses direct implementation of the PouchDB to make a query to the\ndatastore.\nIt also listens to `datastore-destroyed` custom event update state of the list\nitems when datastore was destroyed.\n\nIt listens for `selected-rest-api-changed` custom event as an alternative\nto setting `selectedApi` property directly on the element.\n\n### Example\n\n```html\n<rest-api-menu selected-api=\"[[route.api]]\"></rest-api-menu>\n```\n\n### Datastore access\n\nThis element uses events API to access datastore data. This is provided by the\n`arc-models/rest-api-model` element. See documentation for this element if you\nneed to implement own data exchange logic.\n\nDatastore element is not in the shadow DOM of this element and is should be\nincluded in the application DOM.\n\n```html\n<link rel=\"import\" href=\"bower_components/arc-models/rest-api-model.html\">\n<link rel=\"import\" href=\"bower_components/rest-api-menu/rest-api-menu.html\">\n<rest-api-menu selected-api=\"[[route.api]]\"></rest-api-menu>\n<rest-api-model></rest-api-model>\n```\n\n### Styling\n`<rest-api-menu>` provides the following custom properties and mixins for styling:\n\nCustom property | Description | Default\n----------------|-------------|----------\n`--rest-api-menu` | Mixin applied to the element | `{}`\n`--rest-api-menu-background-color` | Background color of the menu | `inherit`\n`--rest-api-menu-list-item` | Mixin applied to each list item | `{}`\n`--rest-api-menu-selected-item-background-color` | Background color of the selected list item | `rgba(255, 152, 0, 0.24)`\n`--rest-api-menu-name-label` | Mixin applied to the name label | `{}`\n`--arc-menu-empty-info-color` | Color applied to the empty info section | ``\n`--arc-menu-empty-info-title-color` | Color applied to the title in the empty info section | ``",
+      "summary": "",
+      "path": "rest-api-menu.html",
+      "properties": [
+        {
+          "name": "items",
+          "type": "Array.<Object>",
+          "description": "Saved items restored from the datastore.",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 183,
+              "column": 8
+            },
+            "end": {
+              "line": 183,
+              "column": 20
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "attributeType": "Array"
+            }
+          }
+        },
+        {
+          "name": "querying",
+          "type": "boolean | null | undefined",
+          "description": "True when the element is querying the database for the data.",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 187,
+              "column": 8
+            },
+            "end": {
+              "line": 191,
+              "column": 9
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "notify": true,
+              "readOnly": true,
+              "attributeType": "Boolean"
+            }
+          }
+        },
+        {
+          "name": "hasItems",
+          "type": "boolean | null | undefined",
+          "description": "Computed value. `true` if the `items` property has values.",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 195,
+              "column": 8
+            },
+            "end": {
+              "line": 200,
+              "column": 9
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "notify": true,
+              "readOnly": true,
+              "attributeType": "Boolean"
+            }
+          },
+          "defaultValue": "false"
+        },
+        {
+          "name": "dataUnavailable",
+          "type": "boolean | null | undefined",
+          "description": "Computed value. True if query ended and there's no results.",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 204,
+              "column": 8
+            },
+            "end": {
+              "line": 207,
+              "column": 9
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "readOnly": true,
+              "attributeType": "Boolean"
+            }
+          }
+        },
+        {
+          "name": "selectedApi",
+          "type": "string | null | undefined",
+          "description": "Currently selected project ID",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 209,
+              "column": 8
+            },
+            "end": {
+              "line": 209,
+              "column": 27
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "attributeType": "String"
+            }
+          }
+        },
+        {
+          "name": "nextPageToken",
+          "type": "string | null | undefined",
+          "description": "Page token for datastore pagination",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 211,
+              "column": 8
+            },
+            "end": {
+              "line": 211,
+              "column": 29
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "attributeType": "String"
+            }
+          }
+        },
+        {
+          "name": "noAutoQuery",
+          "type": "boolean | null | undefined",
+          "description": "When set the element won't query for APIs data when connected to the DOM.\nIn this case manually call `makeQuery()`",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 216,
+              "column": 8
+            },
+            "end": {
+              "line": 216,
+              "column": 28
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "attributeType": "Boolean"
+            }
+          }
+        }
+      ],
+      "methods": [
+        {
+          "name": "connectedCallback",
+          "description": "",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 228,
+              "column": 4
+            },
+            "end": {
+              "line": 237,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "disconnectedCallback",
+          "description": "",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 239,
+              "column": 4
+            },
+            "end": {
+              "line": 249,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "reset",
+          "description": "Resets the state of the variables.",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 253,
+              "column": 4
+            },
+            "end": {
+              "line": 263,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "refresh",
+          "description": "Refreshes the data from the datastore.\nIt resets the query options, clears items and makes a query to the datastore.",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 268,
+              "column": 4
+            },
+            "end": {
+              "line": 271,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "_onDatabaseDestroy",
+          "description": "Handler for the `datastore-destroyed` custom event",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 273,
+              "column": 4
+            },
+            "end": {
+              "line": 285,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "e"
+            }
+          ],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "_computeItemClass",
+          "description": "Computes class name for the HTML element representing a saved item.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 293,
+              "column": 4
+            },
+            "end": {
+              "line": 298,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "id",
+              "type": "String",
+              "description": "An id to compare"
+            },
+            {
+              "name": "selectedProject",
+              "type": "String",
+              "description": "Currently selected API id"
+            }
+          ],
+          "return": {
+            "type": "String"
+          }
+        },
+        {
+          "name": "_computeHasItems",
+          "description": "Computes value for the `hasItems` property.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 300,
+              "column": 4
+            },
+            "end": {
+              "line": 302,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "length"
+            }
+          ]
+        },
+        {
+          "name": "makeQuery",
+          "description": "The function to call when new query for data is needed.\nUse this intead of `loadPage()` as this function uses debouncer to\nprevent multiple calls at once.",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 308,
+              "column": 4
+            },
+            "end": {
+              "line": 318,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "_dispatchApiList",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 320,
+              "column": 4
+            },
+            "end": {
+              "line": 329,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "detail"
+            }
+          ]
+        },
+        {
+          "name": "_getApiListDetail",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 331,
+              "column": 4
+            },
+            "end": {
+              "line": 337,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": []
+        },
+        {
+          "name": "loadPage",
+          "description": "Performs the query and processes the result.\nThis function immediately queries the data model for data.\nIt does this in a loop until all data are read.",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 345,
+              "column": 4
+            },
+            "end": {
+              "line": 378,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [],
+          "return": {
+            "type": "Promise"
+          }
+        },
+        {
+          "name": "_renderList",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 380,
+              "column": 4
+            },
+            "end": {
+              "line": 382,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "_sortData",
+          "description": "Sorts projects list by `order` and the `title` properties.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 390,
+              "column": 4
+            },
+            "end": {
+              "line": 398,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "a",
+              "type": "Object"
+            },
+            {
+              "name": "b",
+              "type": "Object"
+            }
+          ],
+          "return": {
+            "type": "Number"
+          }
+        },
+        {
+          "name": "_computeDataUnavailable",
+          "description": "Computes value for the `dataUnavailable` property.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 400,
+              "column": 4
+            },
+            "end": {
+              "line": 402,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "hasItems"
+            },
+            {
+              "name": "querying"
+            }
+          ]
+        },
+        {
+          "name": "_openAPI",
+          "description": "Handler for the `tap` event on the item.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 404,
+              "column": 4
+            },
+            "end": {
+              "line": 419,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "e"
+            }
+          ],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "_selecteApiHandler",
+          "description": "Handler for the `selected-rest-api-changed` event.\nIt expects the detail object to have `value` property with selection id.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 425,
+              "column": 4
+            },
+            "end": {
+              "line": 432,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "e",
+              "type": "CustomEvent"
+            }
+          ],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "_onReorder",
+          "description": "Handler for the list reorder event.\nUpdates items order in the datastore.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 437,
+              "column": 4
+            },
+            "end": {
+              "line": 452,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "_updateBulk",
+          "description": "Updates APIs data in bulk operation.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 459,
+              "column": 4
+            },
+            "end": {
+              "line": 470,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "items",
+              "type": "Array.<Object>",
+              "description": "List of index object to update"
+            }
+          ],
+          "return": {
+            "type": "Promise"
+          }
+        },
+        {
+          "name": "_indexUpdated",
+          "description": "Index item has been changed and should be updated / added.\nOnly non-cancelable event is considered.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 476,
+              "column": 4
+            },
+            "end": {
+              "line": 494,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "e",
+              "type": "CustomEvent"
+            }
+          ],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "_indexDeleted",
+          "description": "Handler for API delete event.\nOnly non-cancelable event is considered.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 500,
+              "column": 4
+            },
+            "end": {
+              "line": 515,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "e",
+              "type": "CustomEvent"
+            }
+          ],
+          "return": {
+            "type": "void"
+          }
+        }
+      ],
+      "staticMethods": [],
+      "demos": [
+        {
+          "url": "demo/index.html",
+          "description": ""
+        }
+      ],
+      "metadata": {},
+      "sourceRange": {
+        "start": {
+          "line": 175,
+          "column": 2
+        },
+        "end": {
+          "line": 516,
+          "column": 3
+        }
+      },
+      "privacy": "public",
+      "superclass": "HTMLElement",
+      "name": "UiElements.RestApiMenu",
+      "attributes": [
+        {
+          "name": "items",
+          "description": "Saved items restored from the datastore.",
+          "sourceRange": {
+            "start": {
+              "line": 183,
+              "column": 8
+            },
+            "end": {
+              "line": 183,
+              "column": 20
+            }
+          },
+          "metadata": {},
+          "type": "Array.<Object>"
+        },
+        {
+          "name": "querying",
+          "description": "True when the element is querying the database for the data.",
+          "sourceRange": {
+            "start": {
+              "line": 187,
+              "column": 8
+            },
+            "end": {
+              "line": 191,
+              "column": 9
+            }
+          },
+          "metadata": {},
+          "type": "boolean | null | undefined"
+        },
+        {
+          "name": "has-items",
+          "description": "Computed value. `true` if the `items` property has values.",
+          "sourceRange": {
+            "start": {
+              "line": 195,
+              "column": 8
+            },
+            "end": {
+              "line": 200,
+              "column": 9
+            }
+          },
+          "metadata": {},
+          "type": "boolean | null | undefined"
+        },
+        {
+          "name": "data-unavailable",
+          "description": "Computed value. True if query ended and there's no results.",
+          "sourceRange": {
+            "start": {
+              "line": 204,
+              "column": 8
+            },
+            "end": {
+              "line": 207,
+              "column": 9
+            }
+          },
+          "metadata": {},
+          "type": "boolean | null | undefined"
+        },
+        {
+          "name": "selected-api",
+          "description": "Currently selected project ID",
+          "sourceRange": {
+            "start": {
+              "line": 209,
+              "column": 8
+            },
+            "end": {
+              "line": 209,
+              "column": 27
+            }
+          },
+          "metadata": {},
+          "type": "string | null | undefined"
+        },
+        {
+          "name": "next-page-token",
+          "description": "Page token for datastore pagination",
+          "sourceRange": {
+            "start": {
+              "line": 211,
+              "column": 8
+            },
+            "end": {
+              "line": 211,
+              "column": 29
+            }
+          },
+          "metadata": {},
+          "type": "string | null | undefined"
+        },
+        {
+          "name": "no-auto-query",
+          "description": "When set the element won't query for APIs data when connected to the DOM.\nIn this case manually call `makeQuery()`",
+          "sourceRange": {
+            "start": {
+              "line": 216,
+              "column": 8
+            },
+            "end": {
+              "line": 216,
+              "column": 28
+            }
+          },
+          "metadata": {},
+          "type": "boolean | null | undefined"
+        }
+      ],
+      "events": [
+        {
+          "type": "CustomEvent",
+          "name": "querying-changed",
+          "description": "Fired when the `querying` property changes.",
+          "metadata": {}
+        },
+        {
+          "type": "CustomEvent",
+          "name": "has-items-changed",
+          "description": "Fired when the `hasItems` property changes.",
+          "metadata": {}
+        }
+      ],
+      "styling": {
+        "cssVariables": [],
+        "selectors": []
+      },
+      "slots": [],
+      "tagname": "rest-api-menu"
+    }
+  ]
+}
