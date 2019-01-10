@@ -89,6 +89,7 @@ the License.
 
     .drop-target {
       display: none;
+      z-index: 100;
     }
 
     :host([dragging]) .drop-target {
@@ -208,7 +209,12 @@ the License.
         // Currently selected project ID
         selectedApi: String,
         // Page token for datastore pagination
-        nextPageToken: String
+        nextPageToken: String,
+        /**
+         * When set the element won't query for APIs data when connected to the DOM.
+         * In this case manually call `makeQuery()`
+         */
+        noAutoQuery: Boolean
       };
     }
 
@@ -311,6 +317,25 @@ the License.
         this.loadPage();
       }, 20);
     }
+
+    _dispatchApiList(detail) {
+      const e = new CustomEvent('api-index-list', {
+        detail,
+        bubbles: true,
+        cancelable: true,
+        composed: true
+      });
+      this.dispatchEvent(e);
+      return e;
+    }
+
+    _getApiListDetail() {
+      const detail = {};
+      if (this.nextPageToken) {
+        detail.nextPageToken = this.nextPageToken;
+      }
+      return detail;
+    }
     /**
      * Performs the query and processes the result.
      * This function immediately queries the data model for data.
@@ -319,21 +344,12 @@ the License.
      * @return {Promise}
      */
     loadPage() {
-      const detail = {};
-      if (this.nextPageToken) {
-        detail.nextPageToken = this.nextPageToken;
-      }
-      const e = new CustomEvent('api-index-list', {
-        detail: detail,
-        bubbles: true,
-        cancelable: true,
-        composed: true
-      });
-      this.dispatchEvent(e);
+      const detail = this._getApiListDetail();
+      const e = this._dispatchApiList(detail);
       if (!e.defaultPrevented) {
         this._setQuerying(false);
         console.warn('REST API model not in the DOM.');
-        return;
+        return Promise.reject(new Error('Model not found'));
       }
       return e.detail.result
       .then((result) => {
@@ -358,7 +374,7 @@ the License.
       })
       .catch((e) => {
         this._setQuerying(false);
-        console.error('Query menu items', e);
+        console.warn('Query menu items', e);
       });
     }
 
@@ -379,7 +395,7 @@ the License.
       if (a.order > b.order) {
         return 1;
       }
-      return a.title.localeCompare(b.title);
+      return (a.title || '').localeCompare(b.title);
     }
     // Computes value for the `dataUnavailable` property.
     _computeDataUnavailable(hasItems, querying) {

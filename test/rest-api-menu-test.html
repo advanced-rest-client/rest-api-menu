@@ -1,0 +1,404 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../../iron-test-helpers/mock-interactions.js"></script>
+    <script src="../demo/data-generator.js"></script>
+    <script src="../../chance/dist/chance.min.js"></script>
+    <link rel="import" href="../rest-api-menu.html">
+    <link rel="import" href="../../app-pouchdb/pouchdb.html">
+    <link rel="import" href="../../arc-models/rest-api-model.html">
+  </head>
+  <body>
+
+    <test-fixture id="Basic">
+      <template>
+        <rest-api-menu></rest-api-menu>
+        <rest-api-model></rest-api-model>
+      </template>
+    </test-fixture>
+
+    <test-fixture id="NoAuto">
+      <template>
+        <rest-api-menu no-auto-query></rest-api-menu>
+      </template>
+    </test-fixture>
+
+    <script>
+    /* global DataGenerator, MockInteractions */
+    suite('basic', function() {
+      let element;
+      setup(function() {
+        element = fixture('Basic')[0];
+      });
+
+      test('items is undefined', function() {
+        assert.isUndefined(element.items);
+      });
+
+      test('selectedApi is undefined', function() {
+        assert.isUndefined(element.selectedApi);
+      });
+
+      test('querying is undefined', function() {
+        assert.isUndefined(element.querying);
+      });
+
+      test('hasItems is false', function() {
+        assert.isFalse(element.hasItems);
+      });
+
+      test('dataUnavailable is true', function() {
+        assert.isTrue(element.dataUnavailable);
+      });
+    });
+
+    suite('Data test', function() {
+      suiteSetup(function() {
+        return DataGenerator.generateData();
+      });
+
+      suiteTeardown(function() {
+        return DataGenerator.destroyData();
+      });
+
+      let element;
+      setup(function(done) {
+        element = fixture('Basic')[0];
+        element.addEventListener('has-items-changed', function(e) {
+          if (e.detail.value) {
+            done();
+          }
+        });
+      });
+
+      test('items are set', function() {
+        assert.lengthOf(element.items, 5);
+      });
+
+      test('querying is false', function() {
+        assert.isFalse(element.querying);
+      });
+
+      test('hasItems is true', function() {
+        assert.isTrue(element.hasItems);
+      });
+
+      test('dataUnavailable is false', function() {
+        assert.isFalse(element.dataUnavailable);
+      });
+
+      test('Item tap sends navigate events', function(done) {
+        flush(() => {
+          element.addEventListener('navigate', function(e) {
+            const eventData = e.detail;
+            assert.typeOf(eventData, 'object');
+            assert.equal(eventData.base, 'api-console');
+            assert.typeOf(eventData.id, 'string');
+            done();
+          });
+          const node = element.shadowRoot.querySelectorAll('paper-item')[0];
+          node.click();
+        });
+      });
+
+      test('Reorders items on the list', function(done) {
+        flush(() => {
+          setTimeout(() => {
+            const item = element.shadowRoot.querySelector('paper-item');
+            const stub = sinon.stub(element, '_onReorder');
+            MockInteractions.track(item, 0, 56);
+            assert.isTrue(stub.called);
+            done();
+          }, 50);
+        });
+      });
+    });
+
+    suite('reset()', () => {
+      suiteSetup(function() {
+        return DataGenerator.generateData();
+      });
+
+      suiteTeardown(function() {
+        return DataGenerator.destroyData();
+      });
+
+      let element;
+      setup(function(done) {
+        element = fixture('Basic')[0];
+        element.addEventListener('has-items-changed', function(e) {
+          if (e.detail.value) {
+            done();
+          }
+        });
+      });
+
+      test('Clears nextPageToken', () => {
+        element.nextPageToken = 'test';
+        element.reset();
+        assert.isUndefined(element.nextPageToken);
+      });
+
+      test('Clears __queryTimeout', () => {
+        element.__queryTimeout = 123;
+        element.reset();
+        assert.isUndefined(element.__queryTimeout);
+      });
+
+      test('Clears querying', () => {
+        element._setQuerying(true);
+        element.reset();
+        assert.isFalse(element.querying);
+      });
+
+      test('Clears items', () => {
+        element.reset();
+        assert.deepEqual(element.items, []);
+      });
+    });
+
+    suite('_computeItemClass()', () => {
+      let element;
+      setup(function() {
+        element = fixture('NoAuto');
+      });
+
+      test('Returns iron-selected when arguments matches', () => {
+        const result = element._computeItemClass('a', 'a');
+        assert.equal(result, 'iron-selected');
+      });
+
+      test('Returns empty string when not matches', () => {
+        const result = element._computeItemClass('a', 'b');
+        assert.equal(result, '');
+      });
+
+      test('Returns empty string when no arguments', () => {
+        const result = element._computeItemClass();
+        assert.equal(result, '');
+      });
+    });
+
+    suite('_dispatchApiList()', () => {
+      let element;
+      setup(function() {
+        element = fixture('NoAuto');
+      });
+
+      test('Dispatches api-index-list event', () => {
+        const spy = sinon.spy();
+        element.addEventListener('api-index-list', spy);
+        element._dispatchApiList({});
+        assert.isTrue(spy.called);
+      });
+
+      test('Returns the event', () => {
+        const e = element._dispatchApiList({});
+        assert.typeOf(e, 'customevent');
+        assert.equal(e.type, 'api-index-list');
+      });
+
+      test('Event is cancelable', () => {
+        const e = element._dispatchApiList({});
+        assert.isTrue(e.cancelable);
+      });
+
+      test('Event bubbles', () => {
+        const e = element._dispatchApiList({});
+        assert.isTrue(e.bubbles);
+      });
+
+      test('Event has detail', () => {
+        const detail = {};
+        const e = element._dispatchApiList(detail);
+        assert.isTrue(e.detail === detail);
+      });
+    });
+
+    suite('_getApiListDetail()', () => {
+      let element;
+      setup(function() {
+        element = fixture('NoAuto');
+      });
+
+      test('Returns empty object by default', () => {
+        const result = element._getApiListDetail();
+        assert.deepEqual(result, {});
+      });
+
+      test('Adds nextPageToken', () => {
+        element.nextPageToken = 'abc';
+        const result = element._getApiListDetail();
+        assert.deepEqual(result, {
+          nextPageToken: 'abc'
+        });
+      });
+    });
+
+    suite('loadPage()', () => {
+      let element;
+      setup(function() {
+        element = fixture('NoAuto');
+      });
+
+      function dataFactory(e) {
+        e.preventDefault();
+        e.detail.result = new Promise((resolve) => {
+          const items = DataGenerator.generateApis(5);
+          resolve({
+            nextPageToken: 'test-token',
+            items
+          });
+        });
+      }
+
+      function noopFactory(e) {
+        e.preventDefault();
+        e.detail.result = new Promise((resolve) => {
+          resolve({
+            nextPageToken: 'test-token',
+            items: []
+          });
+        });
+      }
+
+      function errorFactory(e) {
+        e.preventDefault();
+        e.detail.result = Promise.reject(new Error('test error'));
+      }
+
+      test('Rejects promise when the model is not in the DOM', () => {
+        return element.loadPage()
+        .then(() => {
+          throw new Error('Should not resolve');
+        })
+        .catch((cause) => {
+          assert.equal(cause.message, 'Model not found');
+        });
+      });
+
+      test('Sets querying to false when no model', () => {
+        element._setQuerying(true);
+        return element.loadPage()
+        .catch(() => {})
+        .then(() => {
+          assert.isFalse(element.querying);
+        });
+      });
+
+      test('Sets result', () => {
+        element.addEventListener('api-index-list', dataFactory);
+        return element.loadPage()
+        .then(() => {
+          element.makeQuery = () => {};
+          element.removeEventListener('api-index-list', dataFactory);
+          assert.lengthOf(element.items, 5);
+        });
+      });
+
+      test('Sets nextPageToken', () => {
+        element.addEventListener('api-index-list', dataFactory);
+        return element.loadPage()
+        .then(() => {
+          element.makeQuery = () => {};
+          element.removeEventListener('api-index-list', dataFactory);
+          assert.equal(element.nextPageToken, 'test-token');
+        });
+      });
+
+      test('Will not set items when no result', () => {
+        element.addEventListener('api-index-list', noopFactory);
+        return element.loadPage()
+        .then(() => {
+          element.removeEventListener('api-index-list', noopFactory);
+          assert.isUndefined(element.items);
+        });
+      });
+
+      test('Adds new results to existing list', () => {
+        element.items = DataGenerator.generateApis(5);
+        element.addEventListener('api-index-list', dataFactory);
+        return element.loadPage()
+        .then(() => {
+          element.makeQuery = () => {};
+          element.removeEventListener('api-index-list', dataFactory);
+          assert.lengthOf(element.items, 10);
+        });
+      });
+
+      test('Calls _renderList()', () => {
+        element.items = DataGenerator.generateApis(5);
+        element.addEventListener('api-index-list', dataFactory);
+        const spy = sinon.spy(element, '_renderList');
+        return element.loadPage()
+        .then(() => {
+          element.makeQuery = () => {};
+          element.removeEventListener('api-index-list', dataFactory);
+          assert.isTrue(spy.called);
+        });
+      });
+
+      test('Sets querying to false when error', () => {
+        element._setQuerying(true);
+        element.addEventListener('api-index-list', errorFactory);
+        return element.loadPage()
+        .then(() => {
+          element.removeEventListener('api-index-list', errorFactory);
+          assert.isFalse(element.querying);
+        });
+      });
+    });
+
+    suite('_sortData()', () => {
+      let element;
+      setup(function() {
+        element = fixture('NoAuto');
+      });
+
+      test('Returns -1 when a order is < than b order', () => {
+        const result = element._sortData({
+          order: 0
+        }, {
+          order: 1
+        });
+        assert.equal(result, -1);
+      });
+
+      test('Returns 1 when a order is > than b order', () => {
+        const result = element._sortData({
+          order: 1
+        }, {
+          order: 0
+        });
+        assert.equal(result, 1);
+      });
+
+      test('Compares names otherwise', () => {
+        const result = element._sortData({
+          order: 0,
+          name: 'a'
+        }, {
+          order: 0,
+          name: 'b'
+        });
+        assert.equal(result, -1);
+      });
+
+      test('Compares names when missing', () => {
+        const result = element._sortData({
+          order: 0
+        }, {
+          order: 0,
+          name: 'b'
+        });
+        assert.equal(result, -1);
+      });
+    });
+    </script>
+
+  </body>
+</html>

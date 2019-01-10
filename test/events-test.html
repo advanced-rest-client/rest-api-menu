@@ -71,6 +71,13 @@
         return fire('datastore-destroyed', detail);
       }
 
+      function fireSelected(id) {
+        const detail = {
+          value: id
+        };
+        return fire('selected-rest-api-changed', detail);
+      }
+
       suite('Update event', function() {
         let element;
         setup(() => {
@@ -174,6 +181,31 @@
         test('Clears items for "api-index" as an array', () => {
           fireDbDeleted(['api-index']);
           assert.lengthOf(element.items, 0);
+        });
+      });
+
+      suite('Selecting API event', function() {
+        let element;
+        setup(() => {
+          element = fixture('Basic');
+          element.items = [genIndexItem()];
+        });
+
+        test('Selectes the API', () => {
+          fireSelected('test-api');
+          assert.equal(element.selectedApi, 'test-api');
+        });
+
+        test('Wont change selection when the same API is being selected', () => {
+          element.selectedApi = 'test-api';
+          fireSelected('test-api');
+          assert.equal(element.selectedApi, 'test-api');
+        });
+
+        test('Deselects when no ID', () => {
+          element.selectedApi = 'test-api';
+          fireSelected();
+          assert.equal(element.selectedApi, '');
         });
       });
     });

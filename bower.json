@@ -28,7 +28,7 @@
     "paper-listbox": "PolymerElements/paper-listbox#^2.0.0",
     "arc-icons": "advanced-rest-client/arc-icons#^2.0.0",
     "paper-button": "PolymerElements/paper-button#^2.0.0",
-    "arc-file-drop-mixin": "advanced-rest-client/arc-file-drop-mixin#2.0.0-preview"
+    "arc-file-drop-mixin": "advanced-rest-client/arc-file-drop-mixin#^2.0.0"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^3.0.1",
