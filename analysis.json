@@ -13,11 +13,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 182,
+              "line": 183,
               "column": 8
             },
             "end": {
-              "line": 182,
+              "line": 183,
               "column": 20
             }
           },
@@ -34,11 +34,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 186,
+              "line": 187,
               "column": 8
             },
             "end": {
-              "line": 190,
+              "line": 191,
               "column": 9
             }
           },
@@ -57,11 +57,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 194,
+              "line": 195,
               "column": 8
             },
             "end": {
-              "line": 199,
+              "line": 200,
               "column": 9
             }
           },
@@ -81,11 +81,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 203,
+              "line": 204,
               "column": 8
             },
             "end": {
-              "line": 206,
+              "line": 207,
               "column": 9
             }
           },
@@ -103,11 +103,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 208,
+              "line": 209,
               "column": 8
             },
             "end": {
-              "line": 208,
+              "line": 209,
               "column": 27
             }
           },
@@ -124,17 +124,38 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 210,
+              "line": 211,
               "column": 8
             },
             "end": {
-              "line": 210,
+              "line": 211,
               "column": 29
             }
           },
           "metadata": {
             "polymer": {
               "attributeType": "String"
+            }
+          }
+        },
+        {
+          "name": "noAutoQuery",
+          "type": "boolean | null | undefined",
+          "description": "When set the element won't query for APIs data when connected to the DOM.\nIn this case manually call `makeQuery()`",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 216,
+              "column": 8
+            },
+            "end": {
+              "line": 216,
+              "column": 28
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "attributeType": "Boolean"
             }
           }
         }
@@ -146,11 +167,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 222,
+              "line": 228,
               "column": 4
             },
             "end": {
-              "line": 231,
+              "line": 237,
               "column": 5
             }
           },
@@ -166,11 +187,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 233,
+              "line": 239,
               "column": 4
             },
             "end": {
-              "line": 243,
+              "line": 249,
               "column": 5
             }
           },
@@ -186,11 +207,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 247,
+              "line": 253,
               "column": 4
             },
             "end": {
-              "line": 257,
+              "line": 263,
               "column": 5
             }
           },
@@ -206,11 +227,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 262,
+              "line": 268,
               "column": 4
             },
             "end": {
-              "line": 265,
+              "line": 271,
               "column": 5
             }
           },
@@ -226,11 +247,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 267,
+              "line": 273,
               "column": 4
             },
             "end": {
-              "line": 279,
+              "line": 285,
               "column": 5
             }
           },
@@ -250,11 +271,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 287,
+              "line": 293,
               "column": 4
             },
             "end": {
-              "line": 292,
+              "line": 298,
               "column": 5
             }
           },
@@ -281,11 +302,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 294,
+              "line": 300,
               "column": 4
             },
             "end": {
-              "line": 296,
+              "line": 302,
               "column": 5
             }
           },
@@ -302,11 +323,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 302,
+              "line": 308,
               "column": 4
             },
             "end": {
-              "line": 312,
+              "line": 318,
               "column": 5
             }
           },
@@ -317,16 +338,54 @@
           }
         },
         {
-          "name": "loadPage",
-          "description": "Performs the query and processes the result.\nThis function immediately queries the data model for data.\nIt does this in a loop until all data are read.",
-          "privacy": "public",
+          "name": "_dispatchApiList",
+          "description": "",
+          "privacy": "protected",
           "sourceRange": {
             "start": {
               "line": 320,
               "column": 4
             },
             "end": {
-              "line": 362,
+              "line": 329,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "detail"
+            }
+          ]
+        },
+        {
+          "name": "_getApiListDetail",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 331,
+              "column": 4
+            },
+            "end": {
+              "line": 337,
+              "column": 5
+            }
+          },
+          "metadata": {},
+          "params": []
+        },
+        {
+          "name": "loadPage",
+          "description": "Performs the query and processes the result.\nThis function immediately queries the data model for data.\nIt does this in a loop until all data are read.",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 345,
+              "column": 4
+            },
+            "end": {
+              "line": 378,
               "column": 5
             }
           },
@@ -342,11 +401,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 364,
+              "line": 380,
               "column": 4
             },
             "end": {
-              "line": 366,
+              "line": 382,
               "column": 5
             }
           },
@@ -362,11 +421,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 374,
+              "line": 390,
               "column": 4
             },
             "end": {
-              "line": 382,
+              "line": 398,
               "column": 5
             }
           },
@@ -391,11 +450,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 384,
+              "line": 400,
               "column": 4
             },
             "end": {
-              "line": 386,
+              "line": 402,
               "column": 5
             }
           },
@@ -415,11 +474,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 388,
+              "line": 404,
               "column": 4
             },
             "end": {
-              "line": 403,
+              "line": 419,
               "column": 5
             }
           },
@@ -439,11 +498,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 409,
+              "line": 425,
               "column": 4
             },
             "end": {
-              "line": 416,
+              "line": 432,
               "column": 5
             }
           },
@@ -464,11 +523,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 421,
+              "line": 437,
               "column": 4
             },
             "end": {
-              "line": 436,
+              "line": 452,
               "column": 5
             }
           },
@@ -484,11 +543,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 443,
+              "line": 459,
               "column": 4
             },
             "end": {
-              "line": 454,
+              "line": 470,
               "column": 5
             }
           },
@@ -510,11 +569,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 460,
+              "line": 476,
               "column": 4
             },
             "end": {
-              "line": 478,
+              "line": 494,
               "column": 5
             }
           },
@@ -535,11 +594,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 484,
+              "line": 500,
               "column": 4
             },
             "end": {
-              "line": 499,
+              "line": 515,
               "column": 5
             }
           },
@@ -565,11 +624,11 @@
       "metadata": {},
       "sourceRange": {
         "start": {
-          "line": 174,
+          "line": 175,
           "column": 2
         },
         "end": {
-          "line": 500,
+          "line": 516,
           "column": 3
         }
       },
@@ -582,11 +641,11 @@
           "description": "Saved items restored from the datastore.",
           "sourceRange": {
             "start": {
-              "line": 182,
+              "line": 183,
               "column": 8
             },
             "end": {
-              "line": 182,
+              "line": 183,
               "column": 20
             }
           },
@@ -598,11 +657,11 @@
           "description": "True when the element is querying the database for the data.",
           "sourceRange": {
             "start": {
-              "line": 186,
+              "line": 187,
               "column": 8
             },
             "end": {
-              "line": 190,
+              "line": 191,
               "column": 9
             }
           },
@@ -614,11 +673,11 @@
           "description": "Computed value. `true` if the `items` property has values.",
           "sourceRange": {
             "start": {
-              "line": 194,
+              "line": 195,
               "column": 8
             },
             "end": {
-              "line": 199,
+              "line": 200,
               "column": 9
             }
           },
@@ -630,11 +689,11 @@
           "description": "Computed value. True if query ended and there's no results.",
           "sourceRange": {
             "start": {
-              "line": 203,
+              "line": 204,
               "column": 8
             },
             "end": {
-              "line": 206,
+              "line": 207,
               "column": 9
             }
           },
@@ -646,11 +705,11 @@
           "description": "Currently selected project ID",
           "sourceRange": {
             "start": {
-              "line": 208,
+              "line": 209,
               "column": 8
             },
             "end": {
-              "line": 208,
+              "line": 209,
               "column": 27
             }
           },
@@ -662,16 +721,32 @@
           "description": "Page token for datastore pagination",
           "sourceRange": {
             "start": {
-              "line": 210,
+              "line": 211,
               "column": 8
             },
             "end": {
-              "line": 210,
+              "line": 211,
               "column": 29
             }
           },
           "metadata": {},
           "type": "string | null | undefined"
+        },
+        {
+          "name": "no-auto-query",
+          "description": "When set the element won't query for APIs data when connected to the DOM.\nIn this case manually call `makeQuery()`",
+          "sourceRange": {
+            "start": {
+              "line": 216,
+              "column": 8
+            },
+            "end": {
+              "line": 216,
+              "column": 28
+            }
+          },
+          "metadata": {},
+          "type": "boolean | null | undefined"
         }
       ],
       "events": [
