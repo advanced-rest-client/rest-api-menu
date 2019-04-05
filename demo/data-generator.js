@@ -1,5 +1,6 @@
+import '../../../chance/dist/chance.min.js';
 /* global chance */
-const DataGenerator = {};
+export const DataGenerator = {};
 
 DataGenerator.createApiObject = function() {
   const version = 'v' + chance.integer({min: 1, max: 5});

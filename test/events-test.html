@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
-    <script src="../../web-component-tester/browser.js"></script>
-    <script src="../demo/data-generator.js"></script>
-    <script src="../../chance/dist/chance.min.js"></script>
-    <link rel="import" href="../rest-api-menu.html">
-    <link rel="import" href="../../app-pouchdb/pouchdb.html">
-    <link rel="import" href="../../arc-models/rest-api-model.html">
+
+    <script src="../../../@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../../../@polymer/test-fixture/test-fixture.js"></script>
+    <script src="../../../mocha/mocha.js"></script>
+    <script src="../../../chai/chai.js"></script>
+    <script src="../../../wct-mocha/wct-mocha.js"></script>
+
   </head>
   <body>
     <rest-api-model></rest-api-model>
@@ -20,8 +20,10 @@
       </template>
     </test-fixture>
 
-    <script>
-    /* global DataGenerator */
+    <script type="module">
+    import {DataGenerator} from '../demo/data-generator.js';
+    import '../rest-api-menu.js';
+    import '../../../@advanced-rest-client/arc-models/rest-api-model.js';
     suite('Events tests', function() {
       suiteSetup(function() {
         return DataGenerator.destroyData();

@@ -2,9 +2,9 @@
   "schema_version": "1.0.0",
   "elements": [
     {
-      "description": "A quick access menu for REST API projects\n\nA list of REST APIs in the ARC main menu.\nThe element uses direct implementation of the PouchDB to make a query to the\ndatastore.\nIt also listens to `datastore-destroyed` custom event update state of the list\nitems when datastore was destroyed.\n\nIt listens for `selected-rest-api-changed` custom event as an alternative\nto setting `selectedApi` property directly on the element.\n\n### Example\n\n```html\n<rest-api-menu selected-api=\"[[route.api]]\"></rest-api-menu>\n```\n\n### Datastore access\n\nThis element uses events API to access datastore data. This is provided by the\n`arc-models/rest-api-model` element. See documentation for this element if you\nneed to implement own data exchange logic.\n\nDatastore element is not in the shadow DOM of this element and is should be\nincluded in the application DOM.\n\n```html\n<link rel=\"import\" href=\"bower_components/arc-models/rest-api-model.html\">\n<link rel=\"import\" href=\"bower_components/rest-api-menu/rest-api-menu.html\">\n<rest-api-menu selected-api=\"[[route.api]]\"></rest-api-menu>\n<rest-api-model></rest-api-model>\n```\n\n### Styling\n`<rest-api-menu>` provides the following custom properties and mixins for styling:\n\nCustom property | Description | Default\n----------------|-------------|----------\n`--rest-api-menu` | Mixin applied to the element | `{}`\n`--rest-api-menu-background-color` | Background color of the menu | `inherit`\n`--rest-api-menu-list-item` | Mixin applied to each list item | `{}`\n`--rest-api-menu-selected-item-background-color` | Background color of the selected list item | `rgba(255, 152, 0, 0.24)`\n`--rest-api-menu-name-label` | Mixin applied to the name label | `{}`\n`--arc-menu-empty-info-color` | Color applied to the empty info section | ``\n`--arc-menu-empty-info-title-color` | Color applied to the title in the empty info section | ``",
+      "description": "A quick access menu for REST API projects\n\nA list of REST APIs in the ARC main menu.\nThe element uses direct implementation of the PouchDB to make a query to the\ndatastore.\nIt also listens to `datastore-destroyed` custom event update state of the list\nitems when datastore was destroyed.\n\nIt listens for `selected-rest-api-changed` custom event as an alternative\nto setting `selectedApi` property directly on the element.\n\n### Example\n\n```html\n<rest-api-menu selected-api=\"[[route.api]]\"></rest-api-menu>\n```\n\n### Datastore access\n\nThis element uses events API to access datastore data. This is provided by the\n`arc-models/rest-api-model` element. See documentation for this element if you\nneed to implement own data exchange logic.\n\nDatastore element is not in the shadow DOM of this element and is should be\nincluded in the application DOM.\n\n```html\n<link rel=\"import\" href=\"bower_components/arc-models/rest-api-model.html\">\n<link rel=\"import\" href=\"bower_components/rest-api-menu/rest-api-menu.html\">\n<rest-api-menu selected-api=\"[[route.api]]\"></rest-api-menu>\n<rest-api-model></rest-api-model>\n```\n\n### Styling\n`<rest-api-menu>` provides the following custom properties and mixins for styling:\n\nCustom property | Description | Default\n----------------|-------------|----------\n`--rest-api-menu-background-color` | Background color of the menu | `inherit`\n`--rest-api-menu-selected-item-background-color` | Background color of the selected list item | `rgba(255, 152, 0, 0.24)`\n`--arc-menu-empty-info-color` | Color applied to the empty info section | ``\n`--arc-menu-empty-info-title-color` | Color applied to the title in the empty info section | ``",
       "summary": "",
-      "path": "rest-api-menu.html",
+      "path": "rest-api-menu.js",
       "properties": [
         {
           "name": "items",
@@ -13,12 +13,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 183,
-              "column": 8
+              "line": 180,
+              "column": 6
             },
             "end": {
-              "line": 183,
-              "column": 20
+              "line": 180,
+              "column": 18
             }
           },
           "metadata": {
@@ -34,12 +34,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 187,
-              "column": 8
+              "line": 184,
+              "column": 6
             },
             "end": {
-              "line": 191,
-              "column": 9
+              "line": 188,
+              "column": 7
             }
           },
           "metadata": {
@@ -57,12 +57,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 195,
-              "column": 8
+              "line": 192,
+              "column": 6
             },
             "end": {
-              "line": 200,
-              "column": 9
+              "line": 197,
+              "column": 7
             }
           },
           "metadata": {
@@ -81,12 +81,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 204,
-              "column": 8
+              "line": 201,
+              "column": 6
             },
             "end": {
-              "line": 207,
-              "column": 9
+              "line": 204,
+              "column": 7
             }
           },
           "metadata": {
@@ -103,12 +103,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 209,
-              "column": 8
+              "line": 206,
+              "column": 6
             },
             "end": {
-              "line": 209,
-              "column": 27
+              "line": 206,
+              "column": 25
             }
           },
           "metadata": {
@@ -124,12 +124,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 211,
-              "column": 8
+              "line": 208,
+              "column": 6
             },
             "end": {
-              "line": 211,
-              "column": 29
+              "line": 208,
+              "column": 27
             }
           },
           "metadata": {
@@ -145,12 +145,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 216,
-              "column": 8
+              "line": 213,
+              "column": 6
             },
             "end": {
-              "line": 216,
-              "column": 28
+              "line": 213,
+              "column": 26
             }
           },
           "metadata": {
@@ -167,12 +167,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 228,
-              "column": 4
+              "line": 225,
+              "column": 2
             },
             "end": {
-              "line": 237,
-              "column": 5
+              "line": 234,
+              "column": 3
             }
           },
           "metadata": {},
@@ -187,12 +187,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 239,
-              "column": 4
+              "line": 236,
+              "column": 2
             },
             "end": {
-              "line": 249,
-              "column": 5
+              "line": 246,
+              "column": 3
             }
           },
           "metadata": {},
@@ -207,12 +207,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 253,
-              "column": 4
+              "line": 250,
+              "column": 2
             },
             "end": {
-              "line": 263,
-              "column": 5
+              "line": 260,
+              "column": 3
             }
           },
           "metadata": {},
@@ -227,12 +227,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 268,
-              "column": 4
+              "line": 265,
+              "column": 2
             },
             "end": {
-              "line": 271,
-              "column": 5
+              "line": 268,
+              "column": 3
             }
           },
           "metadata": {},
@@ -247,12 +247,12 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 273,
-              "column": 4
+              "line": 270,
+              "column": 2
             },
             "end": {
-              "line": 285,
-              "column": 5
+              "line": 282,
+              "column": 3
             }
           },
           "metadata": {},
@@ -271,12 +271,12 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 293,
-              "column": 4
+              "line": 290,
+              "column": 2
             },
             "end": {
-              "line": 298,
-              "column": 5
+              "line": 295,
+              "column": 3
             }
           },
           "metadata": {},
@@ -302,12 +302,12 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 300,
-              "column": 4
+              "line": 297,
+              "column": 2
             },
             "end": {
-              "line": 302,
-              "column": 5
+              "line": 299,
+              "column": 3
             }
           },
           "metadata": {},
@@ -323,12 +323,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 308,
-              "column": 4
+              "line": 305,
+              "column": 2
             },
             "end": {
-              "line": 318,
-              "column": 5
+              "line": 315,
+              "column": 3
             }
           },
           "metadata": {},
@@ -343,12 +343,12 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 320,
-              "column": 4
+              "line": 317,
+              "column": 2
             },
             "end": {
-              "line": 329,
-              "column": 5
+              "line": 326,
+              "column": 3
             }
           },
           "metadata": {},
@@ -364,12 +364,12 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 331,
-              "column": 4
+              "line": 328,
+              "column": 2
             },
             "end": {
-              "line": 337,
-              "column": 5
+              "line": 334,
+              "column": 3
             }
           },
           "metadata": {},
@@ -381,12 +381,12 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 345,
-              "column": 4
+              "line": 342,
+              "column": 2
             },
             "end": {
-              "line": 378,
-              "column": 5
+              "line": 375,
+              "column": 3
             }
           },
           "metadata": {},
@@ -401,12 +401,12 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 380,
-              "column": 4
+              "line": 377,
+              "column": 2
             },
             "end": {
-              "line": 382,
-              "column": 5
+              "line": 379,
+              "column": 3
             }
           },
           "metadata": {},
@@ -421,12 +421,12 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 390,
-              "column": 4
+              "line": 387,
+              "column": 2
             },
             "end": {
-              "line": 398,
-              "column": 5
+              "line": 395,
+              "column": 3
             }
           },
           "metadata": {},
@@ -450,12 +450,12 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 400,
-              "column": 4
+              "line": 397,
+              "column": 2
             },
             "end": {
-              "line": 402,
-              "column": 5
+              "line": 399,
+              "column": 3
             }
           },
           "metadata": {},
@@ -474,12 +474,12 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 404,
-              "column": 4
+              "line": 401,
+              "column": 2
             },
             "end": {
-              "line": 419,
-              "column": 5
+              "line": 416,
+              "column": 3
             }
           },
           "metadata": {},
@@ -498,12 +498,12 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 425,
-              "column": 4
+              "line": 422,
+              "column": 2
             },
             "end": {
-              "line": 432,
-              "column": 5
+              "line": 429,
+              "column": 3
             }
           },
           "metadata": {},
@@ -518,63 +518,17 @@
           }
         },
         {
-          "name": "_onReorder",
-          "description": "Handler for the list reorder event.\nUpdates items order in the datastore.",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 437,
-              "column": 4
-            },
-            "end": {
-              "line": 452,
-              "column": 5
-            }
-          },
-          "metadata": {},
-          "params": [],
-          "return": {
-            "type": "void"
-          }
-        },
-        {
-          "name": "_updateBulk",
-          "description": "Updates APIs data in bulk operation.",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 459,
-              "column": 4
-            },
-            "end": {
-              "line": 470,
-              "column": 5
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "items",
-              "type": "Array.<Object>",
-              "description": "List of index object to update"
-            }
-          ],
-          "return": {
-            "type": "Promise"
-          }
-        },
-        {
           "name": "_indexUpdated",
           "description": "Index item has been changed and should be updated / added.\nOnly non-cancelable event is considered.",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 476,
-              "column": 4
+              "line": 435,
+              "column": 2
             },
             "end": {
-              "line": 494,
-              "column": 5
+              "line": 453,
+              "column": 3
             }
           },
           "metadata": {},
@@ -594,12 +548,12 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 500,
-              "column": 4
+              "line": 459,
+              "column": 2
             },
             "end": {
-              "line": 515,
-              "column": 5
+              "line": 474,
+              "column": 3
             }
           },
           "metadata": {},
@@ -624,12 +578,12 @@
       "metadata": {},
       "sourceRange": {
         "start": {
-          "line": 175,
-          "column": 2
+          "line": 69,
+          "column": 0
         },
         "end": {
-          "line": 516,
-          "column": 3
+          "line": 475,
+          "column": 1
         }
       },
       "privacy": "public",
@@ -641,12 +595,12 @@
           "description": "Saved items restored from the datastore.",
           "sourceRange": {
             "start": {
-              "line": 183,
-              "column": 8
+              "line": 180,
+              "column": 6
             },
             "end": {
-              "line": 183,
-              "column": 20
+              "line": 180,
+              "column": 18
             }
           },
           "metadata": {},
@@ -657,12 +611,12 @@
           "description": "True when the element is querying the database for the data.",
           "sourceRange": {
             "start": {
-              "line": 187,
-              "column": 8
+              "line": 184,
+              "column": 6
             },
             "end": {
-              "line": 191,
-              "column": 9
+              "line": 188,
+              "column": 7
             }
           },
           "metadata": {},
@@ -673,12 +627,12 @@
           "description": "Computed value. `true` if the `items` property has values.",
           "sourceRange": {
             "start": {
-              "line": 195,
-              "column": 8
+              "line": 192,
+              "column": 6
             },
             "end": {
-              "line": 200,
-              "column": 9
+              "line": 197,
+              "column": 7
             }
           },
           "metadata": {},
@@ -689,12 +643,12 @@
           "description": "Computed value. True if query ended and there's no results.",
           "sourceRange": {
             "start": {
-              "line": 204,
-              "column": 8
+              "line": 201,
+              "column": 6
             },
             "end": {
-              "line": 207,
-              "column": 9
+              "line": 204,
+              "column": 7
             }
           },
           "metadata": {},
@@ -705,12 +659,12 @@
           "description": "Currently selected project ID",
           "sourceRange": {
             "start": {
-              "line": 209,
-              "column": 8
+              "line": 206,
+              "column": 6
             },
             "end": {
-              "line": 209,
-              "column": 27
+              "line": 206,
+              "column": 25
             }
           },
           "metadata": {},
@@ -721,12 +675,12 @@
           "description": "Page token for datastore pagination",
           "sourceRange": {
             "start": {
-              "line": 211,
-              "column": 8
+              "line": 208,
+              "column": 6
             },
             "end": {
-              "line": 211,
-              "column": 29
+              "line": 208,
+              "column": 27
             }
           },
           "metadata": {},
@@ -737,12 +691,12 @@
           "description": "When set the element won't query for APIs data when connected to the DOM.\nIn this case manually call `makeQuery()`",
           "sourceRange": {
             "start": {
-              "line": 216,
-              "column": 8
+              "line": 213,
+              "column": 6
             },
             "end": {
-              "line": 216,
-              "column": 28
+              "line": 213,
+              "column": 26
             }
           },
           "metadata": {},
@@ -768,7 +722,10 @@
         "selectors": []
       },
       "slots": [],
-      "tagname": "rest-api-menu"
+      "tagname": "rest-api-menu",
+      "mixins": [
+        "ArcFileDropMixin"
+      ]
     }
   ]
 }

@@ -1,0 +1,477 @@
+/**
+@license
+Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
+Licensed under the Apache License, Version 2.0 (the "License"); you may not
+use this file except in compliance with the License. You may obtain a copy of
+the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations under
+the License.
+*/
+import {PolymerElement} from '../../@polymer/polymer/polymer-element.js';
+import '../../@polymer/paper-toast/paper-toast.js';
+import '../../@polymer/paper-item/paper-item.js';
+import '../../@polymer/paper-progress/paper-progress.js';
+import {ArcFileDropMixin} from '../../@advanced-rest-client/arc-file-drop-mixin/arc-file-drop-mixin.js';
+import {html} from '../../@polymer/polymer/lib/utils/html-tag.js';
+/**
+ * A quick access menu for REST API projects
+ *
+ * A list of REST APIs in the ARC main menu.
+ * The element uses direct implementation of the PouchDB to make a query to the
+ * datastore.
+ * It also listens to `datastore-destroyed` custom event update state of the list
+ * items when datastore was destroyed.
+ *
+ * It listens for `selected-rest-api-changed` custom event as an alternative
+ * to setting `selectedApi` property directly on the element.
+ *
+ * ### Example
+ *
+ * ```html
+ * <rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
+ * ```
+ *
+ * ### Datastore access
+ *
+ * This element uses events API to access datastore data. This is provided by the
+ * `arc-models/rest-api-model` element. See documentation for this element if you
+ * need to implement own data exchange logic.
+ *
+ * Datastore element is not in the shadow DOM of this element and is should be
+ * included in the application DOM.
+ *
+ * ```html
+ * <link rel="import" href="bower_components/arc-models/rest-api-model.html">
+ * <link rel="import" href="bower_components/rest-api-menu/rest-api-menu.html">
+ * <rest-api-menu selected-api="[[route.api]]"></rest-api-menu>
+ * <rest-api-model></rest-api-model>
+ * ```
+ *
+ * ### Styling
+ * `<rest-api-menu>` provides the following custom properties and mixins for styling:
+ *
+ * Custom property | Description | Default
+ * ----------------|-------------|----------
+ * `--rest-api-menu-background-color` | Background color of the menu | `inherit`
+ * `--rest-api-menu-selected-item-background-color` | Background color of the selected list item | `rgba(255, 152, 0, 0.24)`
+ * `--arc-menu-empty-info-color` | Color applied to the empty info section | ``
+ * `--arc-menu-empty-info-title-color` | Color applied to the title in the empty info section | ``
+ *
+ * @polymer
+ * @customElement
+ * @memberof UiElements
+ * @demo demo/index.html
+ * @appliesMixin ArcFileDropMixin
+ */
+class RestApiMenu extends ArcFileDropMixin(PolymerElement) {
+  static get template() {
+    return html`
+    <style>
+    :host {
+      display: block;
+      background-color: var(--rest-api-menu-background-color, inherit);
+      position: relative;
+      overflow: auto;
+      @apply --layout-flex;
+      @apply --layout-vertical;
+    }
+
+    paper-item {
+      @apply --arc-font-menu;
+      font-weight: 400;
+      min-height: 40px;
+      cursor: pointer;
+      @apply --layout-center;
+    }
+
+    paper-item.dragging {
+      z-index: 1;
+      background-color: #fff;
+    }
+
+    paper-item.iron-selected {
+      background-color: var(--rest-api-menu-selected-item-background-color, rgba(255, 152, 0, 0.24));
+    }
+
+    .name {
+      @apply --layout-flex;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    paper-progress {
+      width: calc(100% - 32px);
+      margin: 0 16px;
+      position: absolute;
+    }
+
+    .empty-info {
+      @apply --arc-font-body1;
+      font-style: italic;
+      margin: 1em 16px;
+      color: var(--arc-menu-empty-info-color);
+    }
+
+    .empty-title {
+      @apply --paper-font-title;
+      white-space: normal;
+      color: var(--arc-menu-empty-info-title-color);
+    }
+
+    .empty-message {
+      @apply --layout-flex;
+      @apply --layout-vertical;
+      @apply --layout-center-center;
+      text-align: center;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .drop-target {
+      display: none;
+      z-index: 100;
+    }
+
+    :host([dragging]) .drop-target {
+      display: block;
+      @apply --layout-fit;
+      @apply --layout-vertical;
+      @apply --layout-center;
+      background-color: #fff;
+      border: 4px var(--drop-file-importer-header-background-color, var(--primary-color)) solid;
+    }
+    </style>
+    <paper-progress hidden\$="[[!querying]]" indeterminate=""></paper-progress>
+    <template is="dom-if" if="[[dataUnavailable]]">
+      <div class="empty-message">
+        <h3 class="empty-title">Drop API project here</h3>
+        <p class="empty-info">There is no API stored with the application</p>
+      </div>
+    </template>
+    <dom-reorderer on-dom-order-changed="_onReorder">
+
+    </dom-reorderer>
+    <template is="dom-repeat" items="[[items]]" id="list">
+      <paper-item on-tap="_openAPI" title\$="[[item.title]]" class\$="[[_computeItemClass(item._id, selectedApi)]]">
+        <span class="name">[[item.title]]</span>
+      </paper-item>
+    </template>
+    <paper-toast id="reorderError" class="error-toast" text="Unable to reorder items. Please, report an issue."></paper-toast>
+    <section class="drop-target">
+      <p class="drop-message">Drop file here</p>
+    </section>
+`;
+  }
+
+  static get is() {return 'rest-api-menu';}
+  static get properties() {
+    return {
+      /**
+       * Saved items restored from the datastore.
+       * @type {Array<Object>}
+       */
+      items: Array,
+      /**
+       * True when the element is querying the database for the data.
+       */
+      querying: {
+        type: Boolean,
+        readOnly: true,
+        notify: true
+      },
+      /**
+       * Computed value. `true` if the `items` property has values.
+       */
+      hasItems: {
+        type: Boolean,
+        value: false,
+        computed: '_computeHasItems(items.length)',
+        notify: true
+      },
+      /**
+       * Computed value. True if query ended and there's no results.
+       */
+      dataUnavailable: {
+        type: Boolean,
+        computed: '_computeDataUnavailable(hasItems, querying)'
+      },
+      // Currently selected project ID
+      selectedApi: String,
+      // Page token for datastore pagination
+      nextPageToken: String,
+      /**
+       * When set the element won't query for APIs data when connected to the DOM.
+       * In this case manually call `makeQuery()`
+       */
+      noAutoQuery: Boolean
+    };
+  }
+
+  constructor() {
+    super();
+    this._onDatabaseDestroy = this._onDatabaseDestroy.bind(this);
+    this._selecteApiHandler = this._selecteApiHandler.bind(this);
+    this._indexUpdated = this._indexUpdated.bind(this);
+    this._indexDeleted = this._indexDeleted.bind(this);
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener('datastore-destroyed', this._onDatabaseDestroy);
+    window.addEventListener('selected-rest-api-changed', this._selecteApiHandler);
+    window.addEventListener('api-index-changed', this._indexUpdated);
+    window.addEventListener('api-deleted', this._indexDeleted);
+    if (!this.querying && !this.items) {
+      this.makeQuery();
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.__queryTimeout) {
+      clearTimeout(this.__queryTimeout);
+      this.__queryTimeout = undefined;
+    }
+    window.removeEventListener('datastore-destroyed', this._onDatabaseDestroy);
+    window.removeEventListener('selected-rest-api-changed', this._selecteApiHandler);
+    window.removeEventListener('api-index-changed', this._indexUpdated);
+    window.removeEventListener('api-deleted', this._indexDeleted);
+  }
+  /**
+   * Resets the state of the variables.
+   */
+  reset() {
+    if (this.nextPageToken) {
+      this.nextPageToken = undefined;
+    }
+    if (this.__queryTimeout) {
+      clearTimeout(this.__queryTimeout);
+      this.__queryTimeout = undefined;
+    }
+    this._setQuerying(false);
+    this.set('items', []);
+  }
+  /**
+   * Refreshes the data from the datastore.
+   * It resets the query options, clears items and makes a query to the datastore.
+   */
+  refresh() {
+    this.reset();
+    this.makeQuery();
+  }
+  // Handler for the `datastore-destroyed` custom event
+  _onDatabaseDestroy(e) {
+    let datastore = e.detail.datastore;
+    if (!datastore || !datastore.length) {
+      return;
+    }
+    if (typeof datastore === 'string') {
+      datastore = [datastore];
+    }
+    if (datastore.indexOf('api-index') === -1 && datastore[0] !== 'all') {
+      return;
+    }
+    this.refresh();
+  }
+  /**
+   * Computes class name for the HTML element representing a saved item.
+   *
+   * @param {String} id An id to compare
+   * @param {String} selectedProject Currently selected API id
+   * @return {String}
+   */
+  _computeItemClass(id, selectedProject) {
+    if (id && id === selectedProject) {
+      return 'iron-selected';
+    }
+    return '';
+  }
+  // Computes value for the `hasItems` property.
+  _computeHasItems(length) {
+    return !!(length);
+  }
+  /**
+   * The function to call when new query for data is needed.
+   * Use this intead of `loadPage()` as this function uses debouncer to
+   * prevent multiple calls at once.
+   */
+  makeQuery() {
+    if (this.__makingQuery) {
+      return;
+    }
+    this.__makingQuery = true;
+    this.__queryTimeout = setTimeout(() => {
+      this.__queryTimeout = undefined;
+      this.__makingQuery = false;
+      this.loadPage();
+    }, 20);
+  }
+
+  _dispatchApiList(detail) {
+    const e = new CustomEvent('api-index-list', {
+      detail,
+      bubbles: true,
+      cancelable: true,
+      composed: true
+    });
+    this.dispatchEvent(e);
+    return e;
+  }
+
+  _getApiListDetail() {
+    const detail = {};
+    if (this.nextPageToken) {
+      detail.nextPageToken = this.nextPageToken;
+    }
+    return detail;
+  }
+  /**
+   * Performs the query and processes the result.
+   * This function immediately queries the data model for data.
+   * It does this in a loop until all data are read.
+   *
+   * @return {Promise}
+   */
+  loadPage() {
+    const detail = this._getApiListDetail();
+    const e = this._dispatchApiList(detail);
+    if (!e.defaultPrevented) {
+      this._setQuerying(false);
+      console.warn('REST API model not in the DOM.');
+      return Promise.reject(new Error('Model not found'));
+    }
+    return e.detail.result
+    .then((result) => {
+      this._setQuerying(false);
+      this.nextPageToken = result.nextPageToken;
+      return result.items;
+    })
+    .then((items) => {
+      if (!items || !items.length) {
+        return;
+      }
+      if (!this.items) {
+        items.sort(this._sortData);
+        this.set('items', items);
+      } else {
+        const concat = this.items.concat(items);
+        concat.sort(this._sortData);
+        this.set('items', concat);
+        this._renderList();
+      }
+      this.makeQuery();
+    })
+    .catch((e) => {
+      this._setQuerying(false);
+      console.warn('Query menu items', e);
+    });
+  }
+
+  _renderList() {
+    this.shadowRoot.querySelector('#list').render();
+  }
+  /**
+   * Sorts projects list by `order` and the `title` properties.
+   *
+   * @param {Object} a
+   * @param {Object} b
+   * @return {Number}
+   */
+  _sortData(a, b) {
+    if (a.order < b.order) {
+      return -1;
+    }
+    if (a.order > b.order) {
+      return 1;
+    }
+    return (a.title || '').localeCompare(b.title);
+  }
+  // Computes value for the `dataUnavailable` property.
+  _computeDataUnavailable(hasItems, querying) {
+    return !hasItems && !querying;
+  }
+  // Handler for the `tap` event on the item.
+  _openAPI(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    const id = e.model.get('item._id');
+    const version = e.model.get('item.latest');
+    this.dispatchEvent(new CustomEvent('navigate', {
+      bubbles: true,
+      composed: true,
+      detail: {
+        base: 'api-console',
+        id,
+        version
+      }
+    }));
+  }
+  /**
+   * Handler for the `selected-rest-api-changed` event.
+   * It expects the detail object to have `value` property with selection id.
+   * @param {CustomEvent} e
+   */
+  _selecteApiHandler(e) {
+    const id = e.detail.value;
+    if (id && id !== this.selectedApi) {
+      this.set('selectedApi', id);
+    } else if (!id) {
+      this.set('selectedApi', '');
+    }
+  }
+  /**
+   * Index item has been changed and should be updated / added.
+   * Only non-cancelable event is considered.
+   * @param {CustomEvent} e
+   */
+  _indexUpdated(e) {
+    if (e.cancelable) {
+      return;
+    }
+    const item = e.detail.apiInfo;
+    if (!this.items) {
+      this.set('items', [item]);
+      this._renderList();
+      return;
+    }
+    const index = this.items.findIndex((obj) => obj._id === item._id);
+    if (index === -1) {
+      this.push('items', item);
+      this.items.sort(this._sortData);
+      this._renderList();
+    } else {
+      this.set(['items', index], item);
+    }
+  }
+  /**
+   * Handler for API delete event.
+   * Only non-cancelable event is considered.
+   * @param {CustomEvent} e
+   */
+  _indexDeleted(e) {
+    if (e.cancelable) {
+      return;
+    }
+    const items = this.items;
+    if (!items || !items.length) {
+      return;
+    }
+    const id = e.detail.id;
+    const index = items.findIndex((item) => item._id === id);
+    if (index === -1) {
+      return;
+    }
+    this.splice('items', index, 1);
+    this._renderList();
+  }
+}
+window.customElements.define(RestApiMenu.is, RestApiMenu);
