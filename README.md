@@ -4,12 +4,6 @@
 
 # rest-api-menu
 
-A quick access menu for REST API projects
+## Deprecation notice
 
-```html
-<rest-api-menu></rest-api-menu>
-```
-
-### API components
-
-This components is a part of API components ecosystem: https://elements.advancedrestclient.com/
+This project is no longer maintained. Use `@advanced-rest-client/arc-menu` instead.
